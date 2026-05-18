@@ -8,6 +8,7 @@ import PortfolioManager from '@/components/admin/PortfolioManager';
 import BlogManager from '@/components/admin/BlogManager';
 import SkillManager from '@/components/admin/SkillManager';
 import HobbyManager from '@/components/admin/HobbyManager';
+import ContactManager from '@/components/admin/ContactManager';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -58,6 +59,7 @@ export default function AdminDashboard() {
         <HeroContentForm />
         <PortfolioManager />
         <BlogManager />
+        <ContactManager />
         <SkillManager />
         <HobbyManager /> {/* Added HobbyManager */}
 

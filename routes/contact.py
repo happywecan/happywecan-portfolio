@@ -1,158 +1,203 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Optional, List, Any
-from bson.objectid import ObjectId
+import asyncio
+import os
+import smtplib
 from datetime import datetime
+from email.message import EmailMessage
+from typing import Any, Optional
+
 import pytz
-from pydantic import BaseModel, Field, EmailStr, BeforeValidator
-from typing_extensions import Annotated
+from bson.objectid import ObjectId
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from motor.motor_asyncio import AsyncIOMotorClient
-import re # Keep re for email validation if not relying solely on Pydantic EmailStr (though EmailStr is usually enough)
-from services.db_service import get_database # Corrected import for the dependency
+from pydantic import BaseModel, EmailStr, Field
+
+from services.auth_service import get_current_admin_user
+from services.db_service import get_database
 
 router = APIRouter()
 
-# Pydantic V2 compatible ObjectId handling
-def validate_object_id(v: Any) -> ObjectId:
-    if isinstance(v, ObjectId):
-        return v
-    if isinstance(v, str) and ObjectId.is_valid(v):
-        return ObjectId(v)
-    raise ValueError("Invalid ObjectId")
 
-PydanticObjectId = Annotated[ObjectId, BeforeValidator(validate_object_id)]
-
-
-# Pydantic model for Contact Form submission
 class ContactFormRequest(BaseModel):
-    name: str = Field(..., min_length=1, description="發送者的姓名")
-    email: EmailStr = Field(..., description="發送者的電子郵件地址")
-    message: str = Field(..., min_length=1, description="聯絡訊息內容")
+    name: str = Field(..., min_length=1, description="Sender name")
+    email: EmailStr = Field(..., description="Sender email address")
+    message: str = Field(..., min_length=1, description="Contact message")
 
-# Pydantic model for Newsletter Subscription
+
 class NewsletterSubscribeRequest(BaseModel):
-    email: EmailStr = Field(..., description="訂閱者的電子郵件地址")
-    source: Optional[str] = "about_page" # Default source
+    email: EmailStr = Field(..., description="Subscriber email")
+    source: Optional[str] = "about_page"
 
-# Pydantic model for Contact Item in DB (for internal use/response)
+
+class ContactStatusUpdateRequest(BaseModel):
+    read: Optional[bool] = None
+    replied: Optional[bool] = None
+
+
 class ContactItem(BaseModel):
-    id: Optional[PydanticObjectId] = Field(alias="_id", default=None)
+    id: str
     name: str
     email: EmailStr
     message: str
-    created_at: datetime = Field(default_factory=lambda: datetime.now(pytz.utc))
+    created_at: datetime
     read: bool = False
     replied: bool = False
 
-    class Config:
-        populate_by_name = True
-        arbitrary_types_allowed = True
-        json_schema_extra = {
-            "example": {
-                "name": "測試使用者",
-                "email": "test@example.com",
-                "message": "這是一條測試訊息。",
-            }
-        }
 
-# Pydantic model for Newsletter Subscriber Item in DB (for internal use/response)
-class SubscriberItem(BaseModel):
-    id: Optional[PydanticObjectId] = Field(alias="_id", default=None)
-    email: EmailStr
-    subscribed_at: datetime = Field(default_factory=lambda: datetime.now(pytz.utc))
-    active: bool = True
-    source: str = "about_page"
+def _to_bool(value: Optional[str], default: bool = False) -> bool:
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
-    class Config:
-        populate_by_name = True
-        arbitrary_types_allowed = True
-        json_schema_extra = {
-            "example": {
-                "email": "subscribe@example.com",
-                "source": "footer",
-            }
-        }
+
+def _send_contact_notification_sync(sender_name: str, sender_email: str, message: str) -> None:
+    mail_server = os.getenv("MAIL_SERVER")
+    mail_username = os.getenv("MAIL_USERNAME")
+    mail_password = os.getenv("MAIL_PASSWORD")
+    mail_port = int(os.getenv("MAIL_PORT", "587"))
+    mail_use_tls = _to_bool(os.getenv("MAIL_USE_TLS"), True)
+    notify_to = os.getenv("CONTACT_NOTIFY_TO") or mail_username
+
+    if not mail_server or not mail_username or not mail_password or not notify_to:
+        return
+
+    email_message = EmailMessage()
+    email_message["Subject"] = f"[Portfolio Contact] {sender_name}"
+    email_message["From"] = mail_username
+    email_message["To"] = notify_to
+    email_message["Reply-To"] = sender_email
+    email_message.set_content(
+        f"New contact submission\n\n"
+        f"Name: {sender_name}\n"
+        f"Email: {sender_email}\n\n"
+        f"Message:\n{message}\n"
+    )
+
+    with smtplib.SMTP(mail_server, mail_port, timeout=20) as server:
+        if mail_use_tls:
+            server.starttls()
+        server.login(mail_username, mail_password)
+        server.send_message(email_message)
+
 
 @router.post("/contactme", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def contact_form(data: ContactFormRequest, db: AsyncIOMotorClient = Depends(get_database)):
-    """處理聯絡表單提交"""
     try:
         contact_data = {
-            'name': data.name,
-            'email': data.email,
-            'message': data.message,
-            'created_at': datetime.now(pytz.utc),
-            'read': False,
-            'replied': False
+            "name": data.name,
+            "email": str(data.email),
+            "message": data.message,
+            "created_at": datetime.now(pytz.utc),
+            "read": False,
+            "replied": False,
         }
-        
         result = await db.contacts.insert_one(contact_data)
-        
+
+        try:
+            await asyncio.to_thread(
+                _send_contact_notification_sync,
+                data.name,
+                str(data.email),
+                data.message,
+            )
+        except Exception as mail_error:
+            # Do not break form success if SMTP fails.
+            print(f"Contact notification email failed: {mail_error}")
+
         return {
-            'success': True,
-            'message': '您的訊息已送出！我會盡快回覆您。',
-            'contact_id': str(result.inserted_id)
+            "success": True,
+            "message": "Your message has been sent. I will get back to you soon.",
+            "contact_id": str(result.inserted_id),
         }
-            
-    except Exception as e:
-        print(f"聯絡表單處理錯誤: {e}", file=sys.stderr)
-        raise HTTPException(status_code=500, detail="伺服器處理請求時發生錯誤")
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Server error while saving contact form: {exc}")
+
 
 @router.post("/subscribe", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def subscribe_newsletter(data: NewsletterSubscribeRequest, db: AsyncIOMotorClient = Depends(get_database)):
-    """處理電子報訂閱請求"""
     try:
-        email = data.email
-        
-        # 檢查是否已訂閱
-        existing_subscriber = await db.newsletter_subscribers.find_one({'email': email})
-        
+        email = str(data.email)
+        existing_subscriber = await db.newsletter_subscribers.find_one({"email": email})
+
         if existing_subscriber:
-            if not existing_subscriber.get('active', True): # If not active, reactivate
+            if not existing_subscriber.get("active", True):
                 await db.newsletter_subscribers.update_one(
-                    {'email': email},
-                    {'$set': {'active': True, 'subscribed_at': datetime.now(pytz.utc)}}
+                    {"email": email},
+                    {"$set": {"active": True, "subscribed_at": datetime.now(pytz.utc)}},
                 )
-                return {
-                    'success': True,
-                    'message': '您已重新訂閱我們的電子報！'
-                }
-            raise HTTPException(status_code=400, detail="此電子郵件已經訂閱了我們的電子報")
-        
-        # 創建新訂閱
+                return {"success": True, "message": "Subscription reactivated."}
+            raise HTTPException(status_code=400, detail="This email is already subscribed.")
+
         subscriber_data = {
-            'email': email,
-            'subscribed_at': datetime.now(pytz.utc),
-            'active': True,
-            'source': data.source
+            "email": email,
+            "subscribed_at": datetime.now(pytz.utc),
+            "active": True,
+            "source": data.source,
         }
-        
         result = await db.newsletter_subscribers.insert_one(subscriber_data)
-        
         return {
-            'success': True,
-            'message': '訂閱成功！感謝您的關注',
-            'subscriber_id': str(result.inserted_id)
+            "success": True,
+            "message": "Subscription successful. Thanks for following.",
+            "subscriber_id": str(result.inserted_id),
         }
-            
-    except HTTPException: # Re-raise FastAPI HTTP exceptions
+    except HTTPException:
         raise
-    except Exception as e:
-        print(f"訂閱處理錯誤: {e}", file=sys.stderr)
-        raise HTTPException(status_code=500, detail="伺服器處理請求時發生錯誤")
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Server error while subscribing: {exc}")
 
 
-# Admin routes (feedback, get_contacts, update contact status, get subscribers, etc.)
-# are kept as stubs for now. They would require proper authentication dependencies.
-# The original logic would need to be rewritten for FastAPI.
+@router.get("/contacts", response_model=list[ContactItem])
+async def get_contacts_admin(
+    db: AsyncIOMotorClient = Depends(get_database),
+    admin_user: dict = Depends(get_current_admin_user),
+    limit: int = Query(200, ge=1, le=1000),
+):
+    try:
+        docs = await db.contacts.find().sort("created_at", -1).to_list(limit)
+        return [
+            ContactItem(
+                id=str(doc.get("_id")),
+                name=doc.get("name", ""),
+                email=doc.get("email", ""),
+                message=doc.get("message", ""),
+                created_at=doc.get("created_at", datetime.now(pytz.utc)),
+                read=bool(doc.get("read", False)),
+                replied=bool(doc.get("replied", False)),
+            )
+            for doc in docs
+        ]
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch contacts: {exc}")
 
-# @router.post("/feedback", ...)
-# async def feedback(...):
-#     pass
 
-# @router.get("/feedback", ...)
-# async def get_feedback(...):
-#     pass
+@router.patch("/contacts/{contact_id}", response_model=ContactItem)
+async def update_contact_status_admin(
+    contact_id: str,
+    payload: ContactStatusUpdateRequest,
+    db: AsyncIOMotorClient = Depends(get_database),
+    admin_user: dict = Depends(get_current_admin_user),
+):
+    if not ObjectId.is_valid(contact_id):
+        raise HTTPException(status_code=400, detail="Invalid contact ID")
 
-# @router.get('/api/contacts', ...)
-# async def get_contacts(...):
-#     pass
+    update_data: dict[str, Any] = {}
+    if payload.read is not None:
+        update_data["read"] = payload.read
+    if payload.replied is not None:
+        update_data["replied"] = payload.replied
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No status fields provided")
+
+    await db.contacts.update_one({"_id": ObjectId(contact_id)}, {"$set": update_data})
+    doc = await db.contacts.find_one({"_id": ObjectId(contact_id)})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Contact not found")
+
+    return ContactItem(
+        id=str(doc.get("_id")),
+        name=doc.get("name", ""),
+        email=doc.get("email", ""),
+        message=doc.get("message", ""),
+        created_at=doc.get("created_at", datetime.now(pytz.utc)),
+        read=bool(doc.get("read", False)),
+        replied=bool(doc.get("replied", False)),
+    )
