@@ -112,8 +112,8 @@ GitHub Actions workflow:
 On push to `main`, it:
 
 1. Authenticates to Google Cloud.
-2. Runs Cloud Build with `gcp/cloudbuild-vm.yaml`.
-3. Pushes backend/frontend images tagged `main`.
+2. Builds backend/frontend Docker images on the GitHub Actions runner.
+3. Pushes backend/frontend images tagged `main` to Artifact Registry.
 4. Copies `docker-compose.vm-pull.yml` to the VM.
 5. Runs `/home/Angelo/deploy-vm-pull.sh`.
 6. Verifies `/healthz`.
@@ -127,11 +127,8 @@ GCP_SA_KEY
 This should contain the JSON key for a GCP service account with permission to:
 
 ```txt
-cloudbuild.builds.create
 compute.instances.get
 compute.instances.setMetadata
-compute.projects.get
-iam.serviceAccounts.actAs, if needed by Cloud Build
 artifactregistry repositories upload/read
 ```
 

@@ -38,11 +38,26 @@ jobs:
         with:
           project_id: ${{ env.PROJECT_ID }}
 
-      - name: Build and push images
+      - name: Configure Docker for Artifact Registry
         run: |
-          gcloud builds submit \
-            --config gcp/cloudbuild-vm.yaml \
-            --substitutions _REGION=${REGION},_IMAGE_TAG=main,_API_URL=https://api.happywecan.com
+          gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+
+      - name: Build and push backend image
+        run: |
+          docker build \
+            -f Dockerfile.backend \
+            -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/happywecan/happywecan-api:main \
+            .
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/happywecan/happywecan-api:main
+
+      - name: Build and push frontend image
+        run: |
+          docker build \
+            -f frontend/Dockerfile \
+            --build-arg NEXT_PUBLIC_API_URL=https://api.happywecan.com \
+            -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/happywecan/happywecan-frontend:main \
+            ./frontend
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/happywecan/happywecan-frontend:main
 
       - name: Copy compose file to VM
         run: |
