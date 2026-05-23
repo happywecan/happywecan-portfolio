@@ -1,0 +1,63 @@
+name: Deploy VM
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vm
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: focal-freedom-473403-f8
+  REGION: asia-east1
+  VM_NAME: happywecan-vm
+  VM_ZONE: us-central1-a
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Build and push images
+        run: |
+          gcloud builds submit \
+            --config gcp/cloudbuild-vm.yaml \
+            --substitutions _REGION=${REGION},_IMAGE_TAG=main,_API_URL=https://api.happywecan.com
+
+      - name: Copy compose file to VM
+        run: |
+          gcloud compute scp docker-compose.vm-pull.yml \
+            ${VM_NAME}:/home/Angelo/angelo20011016.github.io/docker-compose.vm-pull.yml \
+            --zone=${VM_ZONE}
+
+      - name: Deploy on VM
+        run: |
+          gcloud compute ssh ${VM_NAME} \
+            --zone=${VM_ZONE} \
+            --command="chmod +x /home/Angelo/deploy-vm-pull.sh && /home/Angelo/deploy-vm-pull.sh"
+
+      - name: Verify API
+        run: |
+          gcloud compute ssh ${VM_NAME} \
+            --zone=${VM_ZONE} \
+            --command="curl -fsS -H 'Host: api.happywecan.com' http://127.0.0.1/healthz"

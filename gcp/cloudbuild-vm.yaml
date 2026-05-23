@@ -1,0 +1,46 @@
+substitutions:
+  _REGION: asia-east1
+  _REPOSITORY: happywecan
+  _API_SERVICE: happywecan-api
+  _FRONTEND_SERVICE: happywecan-frontend
+  _IMAGE_TAG: main
+  _API_URL: https://api.happywecan.com
+
+steps:
+  - id: Build backend image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - Dockerfile.backend
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_API_SERVICE}:${_IMAGE_TAG}
+      - .
+
+  - id: Build frontend image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - frontend/Dockerfile
+      - --build-arg
+      - NEXT_PUBLIC_API_URL=${_API_URL}
+      - -t
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_FRONTEND_SERVICE}:${_IMAGE_TAG}
+      - ./frontend
+
+  - id: Push backend image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_API_SERVICE}:${_IMAGE_TAG}
+
+  - id: Push frontend image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_FRONTEND_SERVICE}:${_IMAGE_TAG}
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_API_SERVICE}:${_IMAGE_TAG}
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_FRONTEND_SERVICE}:${_IMAGE_TAG}
