@@ -81,4 +81,4 @@ jobs:
         run: |
           gcloud compute ssh ${VM_NAME} \
             --zone=${VM_ZONE} \
-            --command="curl -fsS -H 'Host: api.happywecan.com' http://127.0.0.1/healthz"
+            --command="for i in \$(seq 1 12); do curl -fsS -H 'Host: api.happywecan.com' http://127.0.0.1/healthz && exit 0; sleep 5; done; exit 1"
