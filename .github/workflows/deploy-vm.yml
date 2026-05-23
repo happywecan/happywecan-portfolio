@@ -62,8 +62,11 @@ jobs:
       - name: Copy compose file to VM
         run: |
           gcloud compute scp docker-compose.vm-pull.yml \
-            ${VM_NAME}:/home/Angelo/angelo20011016.github.io/docker-compose.vm-pull.yml \
+            ${VM_NAME}:/tmp/docker-compose.vm-pull.yml \
             --zone=${VM_ZONE}
+          gcloud compute ssh ${VM_NAME} \
+            --zone=${VM_ZONE} \
+            --command="sudo cp /tmp/docker-compose.vm-pull.yml /home/Angelo/angelo20011016.github.io/docker-compose.vm-pull.yml && sudo chown Angelo:Angelo /home/Angelo/angelo20011016.github.io/docker-compose.vm-pull.yml"
 
       - name: Deploy on VM
         run: |
