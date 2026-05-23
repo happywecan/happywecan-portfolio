@@ -59,10 +59,13 @@ jobs:
             ./frontend
           docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/happywecan/happywecan-frontend:main
 
-      - name: Copy compose file to VM
+      - name: Copy deployment files to VM
         run: |
           gcloud compute scp docker-compose.vm-pull.yml \
             ${VM_NAME}:/tmp/docker-compose.vm-pull.yml \
+            --zone=${VM_ZONE}
+          gcloud compute scp scripts/deploy-vm-pull.sh \
+            ${VM_NAME}:/tmp/deploy-vm-pull.sh \
             --zone=${VM_ZONE}
           gcloud compute ssh ${VM_NAME} \
             --zone=${VM_ZONE} \
@@ -72,7 +75,7 @@ jobs:
         run: |
           gcloud compute ssh ${VM_NAME} \
             --zone=${VM_ZONE} \
-            --command="chmod +x /home/Angelo/deploy-vm-pull.sh && /home/Angelo/deploy-vm-pull.sh"
+            --command="sudo bash /tmp/deploy-vm-pull.sh"
 
       - name: Verify API
         run: |
