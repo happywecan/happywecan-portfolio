@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
 
 interface ContentDetailPageProps {
   backHref: string;
@@ -79,7 +78,7 @@ export default function ContentDetailPage({
 
             {content && (
               <div className="prose prose-neutral mt-12 max-w-none prose-headings:font-mono prose-headings:uppercase prose-headings:tracking-normal prose-p:text-black/70 prose-li:text-black/70 prose-strong:text-black">
-                <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {content}
                 </ReactMarkdown>
               </div>
