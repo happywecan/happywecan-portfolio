@@ -131,6 +131,11 @@ export interface SiteSettings {
   contact_local_time_label: string;
 }
 
+let siteSettingsCache: SiteSettings | null = null;
+let siteSettingsCacheTime = 0;
+let siteSettingsRequest: Promise<SiteSettings> | null = null;
+const SITE_SETTINGS_CACHE_TTL_MS = 30_000;
+
 /**
  * Fetches the Hero section settings from the backend.
  * @returns A Promise that resolves to HeroSettings.
@@ -179,19 +184,34 @@ export async function updateHeroSettings(settings: HeroSettings, token: string):
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {
-  const response = await fetch(`${API_BASE_URL}/api/settings/site`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to fetch site settings');
+  if (siteSettingsCache && Date.now() - siteSettingsCacheTime < SITE_SETTINGS_CACHE_TTL_MS) {
+    return siteSettingsCache;
   }
 
-  return response.json();
+  if (!siteSettingsRequest) {
+    siteSettingsRequest = (async () => {
+      const response = await fetch(`${API_BASE_URL}/api/settings/site`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to fetch site settings');
+      }
+
+      const settings: SiteSettings = await response.json();
+      siteSettingsCache = settings;
+      siteSettingsCacheTime = Date.now();
+      return settings;
+    })().finally(() => {
+      siteSettingsRequest = null;
+    });
+  }
+
+  return siteSettingsRequest;
 }
 
 export async function updateSiteSettings(settings: SiteSettings, token: string): Promise<SiteSettings> {
@@ -209,5 +229,8 @@ export async function updateSiteSettings(settings: SiteSettings, token: string):
     throw new Error(errorData.detail || 'Failed to update site settings');
   }
 
-  return response.json();
+  const updatedSettings: SiteSettings = await response.json();
+  siteSettingsCache = updatedSettings;
+  siteSettingsCacheTime = Date.now();
+  return updatedSettings;
 }

@@ -96,4 +96,4 @@ jobs:
           gcloud compute ssh ${VM_NAME} \
             --zone=${VM_ZONE} \
             --tunnel-through-iap \
-            --command="cd /home/Angelo/angelo20011016.github.io && for i in \$(seq 1 12); do sudo docker compose -f docker-compose.vm-pull.yml exec -T nginx wget -qO- http://backend:8000/healthz && exit 0; sleep 5; done; exit 1"
+            --command="sudo sh -lc 'cd /home/Angelo/angelo20011016.github.io && for i in \$(seq 1 12); do docker compose -f docker-compose.vm-pull.yml exec -T nginx wget -qO- http://backend:8000/healthz && exit 0; sleep 5; done; exit 1'"
