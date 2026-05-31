@@ -32,6 +32,7 @@ async def connect_to_mongo():
     try:
         _mongo_client_instance = AsyncIOMotorClient(mongo_uri)
         _db_instance = _mongo_client_instance.get_database()
+        await _db_instance.command("ping")
         print("✅ MongoDB (db_service) connected successfully!")
     except Exception as e:
         print(f"\n🔴 ERROR (db_service): Failed to connect to MongoDB: {e}", file=sys.stderr)
