@@ -6,9 +6,9 @@ eventlet==0.36.1
 # Flask-PyMongo==3.0.1 # Removed
 # Flask-Cors==4.0.1 # Removed
 motor
-fastapi==0.111.0
+fastapi==0.136.3
 uvicorn==0.30.1
-python-multipart==0.0.9
+python-multipart==0.0.29
 pymongo==4.11.1
 pydantic==2.11.7 # Keep pydantic for data validation
 # Keep other existing dependencies that are not Flask-specific
@@ -67,7 +67,7 @@ Pygments==2.19.1
 pymongo==4.11.1
 pyparsing==3.2.3
 python-dateutil==2.9.0.post0
-python-dotenv==1.1.0
+python-dotenv==1.2.2
 pytz==2025.1
 pyzmq==26.2.1
 requests==2.32.4
@@ -84,7 +84,7 @@ urllib3==2.5.0
 wcwidth==0.2.13
 gunicorn
 passlib==1.7.4
-Pillow==11.3.0
+Pillow==12.2.0
 bcrypt==3.2.0
 python-jose
 httpx==0.27.0

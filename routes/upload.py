@@ -48,7 +48,7 @@ async def upload_image(file: UploadFile = File(...)):
 
         content = b"".join(chunks)
         try:
-            with Image.open(BytesIO(content)) as image:
+            with Image.open(BytesIO(content), formats=["JPEG", "PNG", "WEBP", "GIF"]) as image:
                 if image.format not in ALLOWED_IMAGE_FORMATS:
                     raise HTTPException(status_code=400, detail="Unsupported image format")
                 image.verify()
