@@ -69,25 +69,31 @@ jobs:
         run: |
           gcloud compute scp docker-compose.vm-pull.yml \
             ${VM_NAME}:/tmp/docker-compose.vm-pull-${GITHUB_SHA}.yml \
-            --zone=${VM_ZONE}
+            --zone=${VM_ZONE} \
+            --tunnel-through-iap
           gcloud compute scp scripts/deploy-vm-pull.sh \
             ${VM_NAME}:/tmp/deploy-vm-pull-${GITHUB_SHA}.sh \
-            --zone=${VM_ZONE}
+            --zone=${VM_ZONE} \
+            --tunnel-through-iap
           gcloud compute scp docs/nginx-vm.conf \
             ${VM_NAME}:/tmp/nginx-vm-${GITHUB_SHA}.conf \
-            --zone=${VM_ZONE}
+            --zone=${VM_ZONE} \
+            --tunnel-through-iap
           gcloud compute ssh ${VM_NAME} \
             --zone=${VM_ZONE} \
+            --tunnel-through-iap \
             --command="sudo cp /tmp/docker-compose.vm-pull-${GITHUB_SHA}.yml /home/Angelo/angelo20011016.github.io/docker-compose.vm-pull.yml && sudo cp /tmp/nginx-vm-${GITHUB_SHA}.conf /home/Angelo/angelo20011016.github.io/docs/nginx-vm.conf && sudo chown Angelo:Angelo /home/Angelo/angelo20011016.github.io/docker-compose.vm-pull.yml /home/Angelo/angelo20011016.github.io/docs/nginx-vm.conf"
 
       - name: Deploy on VM
         run: |
           gcloud compute ssh ${VM_NAME} \
             --zone=${VM_ZONE} \
+            --tunnel-through-iap \
             --command="sudo env IMAGE_TAG=${GITHUB_SHA} bash /tmp/deploy-vm-pull-${GITHUB_SHA}.sh && sudo rm -f /tmp/docker-compose.vm-pull-${GITHUB_SHA}.yml /tmp/deploy-vm-pull-${GITHUB_SHA}.sh /tmp/nginx-vm-${GITHUB_SHA}.conf"
 
       - name: Verify API
         run: |
           gcloud compute ssh ${VM_NAME} \
             --zone=${VM_ZONE} \
+            --tunnel-through-iap \
             --command="for i in \$(seq 1 12); do curl -fsS -H 'Host: api.happywecan.com' http://127.0.0.1/healthz && exit 0; sleep 5; done; exit 1"
