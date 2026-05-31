@@ -8,7 +8,6 @@ import Image from 'next/image';
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw'; // Import rehypeRaw
 
 interface DetailModalProps {
   isOpen: boolean;
@@ -100,7 +99,7 @@ const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, title, image
             {/* Markdown Content */}
             {content && (
                 <div className="font-inter text-gray-300 leading-relaxed prose prose-invert max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {content}
                     </ReactMarkdown>
                 </div>

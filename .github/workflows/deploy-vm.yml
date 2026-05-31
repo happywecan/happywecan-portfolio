@@ -23,6 +23,7 @@ jobs:
 
     permissions:
       contents: read
+      id-token: write
 
     steps:
       - name: Checkout
@@ -31,7 +32,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          workload_identity_provider: projects/193468143671/locations/global/workloadIdentityPools/github-actions/providers/happywecan-portfolio
+          service_account: github-actions-deployer@focal-freedom-473403-f8.iam.gserviceaccount.com
 
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
@@ -46,8 +48,10 @@ jobs:
         run: |
           docker build \
             -f Dockerfile.backend \
+            -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/happywecan/happywecan-api:${GITHUB_SHA} \
             -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/happywecan/happywecan-api:main \
             .
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/happywecan/happywecan-api:${GITHUB_SHA}
           docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/happywecan/happywecan-api:main
 
       - name: Build and push frontend image
@@ -55,8 +59,10 @@ jobs:
           docker build \
             -f frontend/Dockerfile \
             --build-arg NEXT_PUBLIC_API_URL=https://api.happywecan.com \
+            -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/happywecan/happywecan-frontend:${GITHUB_SHA} \
             -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/happywecan/happywecan-frontend:main \
             ./frontend
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/happywecan/happywecan-frontend:${GITHUB_SHA}
           docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/happywecan/happywecan-frontend:main
 
       - name: Copy deployment files to VM
@@ -75,7 +81,7 @@ jobs:
         run: |
           gcloud compute ssh ${VM_NAME} \
             --zone=${VM_ZONE} \
-            --command="sudo bash /tmp/deploy-vm-pull.sh"
+            --command="sudo env IMAGE_TAG=${GITHUB_SHA} bash /tmp/deploy-vm-pull.sh"
 
       - name: Verify API
         run: |

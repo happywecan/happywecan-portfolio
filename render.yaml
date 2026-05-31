@@ -11,6 +11,8 @@ services:
         sync: false
       - key: SECRET_KEY
         generateValue: true
+      - key: ENVIRONMENT
+        value: production
       - key: CORS_ORIGINS
         value: https://angelo.happywecan.com
       - key: ADMIN_USER

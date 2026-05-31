@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -15,35 +15,32 @@ dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path=dotenv_path)
 else:
-    print("⚠️ WARNING: .env file not found at:", dotenv_path, file=sys.stderr)
+        print("WARNING: .env file not found at:", dotenv_path, file=sys.stderr)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("--- Final Config Loaded in App ---")
-    print(f"AZURE_KEY: {bool(os.getenv('AZURE_SPEECH_KEY'))}") # Check directly from env
-    print("----------------------------------")
-
     # Use the database connection lifespan from db_service
     async with connect_to_mongo():
         yield
 # FastAPI app instance
+environment = os.getenv("ENVIRONMENT", "development").lower()
+is_production = environment == "production"
+
 app = FastAPI(
     title="Angelo's Portfolio API",
     description="API for managing portfolio, blog, contact, and user data.",
     version="0.1.0",
     lifespan=lifespan, # Pass the lifespan context manager
+    docs_url=None if is_production else "/docs",
+    redoc_url=None if is_production else "/redoc",
+    openapi_url=None if is_production else "/openapi.json",
 )
 
 # CORS Middleware for FastAPI
 # Adjust origins as needed for your frontend deployment
-origins = [
+origins = [] if is_production else [
     "http://localhost",
-    "http://localhost:3000",  # Next.js frontend local development URL
-    
-    # 【關鍵修正】: 根據錯誤訊息，加入您的前端的 IP 地址和端口
-    "http://172.21.240.1:3000",
-    
-    # Add your production frontend URL here when deployed
+    "http://localhost:3000",
 ]
 cors_origins = os.getenv("CORS_ORIGINS")
 if cors_origins:
@@ -53,8 +50,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
 # --- Mount Static Files Directory ---

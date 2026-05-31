@@ -1,10 +1,11 @@
 services:
   backend:
-    image: asia-east1-docker.pkg.dev/focal-freedom-473403-f8/happywecan/happywecan-api:main
+    image: asia-east1-docker.pkg.dev/focal-freedom-473403-f8/happywecan/happywecan-api:${IMAGE_TAG:-main}
     restart: unless-stopped
     env_file:
       - .env
     environment:
+      ENVIRONMENT: production
       CORS_ORIGINS: https://angelo.happywecan.com
       MAIL_SERVER: smtp.gmail.com
       MAIL_PORT: "587"
@@ -13,7 +14,7 @@ services:
       - ./static/uploads:/app/static/uploads
 
   frontend:
-    image: asia-east1-docker.pkg.dev/focal-freedom-473403-f8/happywecan/happywecan-frontend:main
+    image: asia-east1-docker.pkg.dev/focal-freedom-473403-f8/happywecan/happywecan-frontend:${IMAGE_TAG:-main}
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_API_URL: https://api.happywecan.com

@@ -18,14 +18,14 @@ router = APIRouter()
 
 
 class ContactFormRequest(BaseModel):
-    name: str = Field(..., min_length=1, description="Sender name")
+    name: str = Field(..., min_length=1, max_length=120, description="Sender name")
     email: EmailStr = Field(..., description="Sender email address")
-    message: str = Field(..., min_length=1, description="Contact message")
+    message: str = Field(..., min_length=1, max_length=5000, description="Contact message")
 
 
 class NewsletterSubscribeRequest(BaseModel):
     email: EmailStr = Field(..., description="Subscriber email")
-    source: Optional[str] = "about_page"
+    source: Optional[str] = Field("about_page", max_length=80)
 
 
 class ContactStatusUpdateRequest(BaseModel):
@@ -90,7 +90,7 @@ async def contact_form(data: ContactFormRequest, db: AsyncIOMotorClient = Depend
             "read": False,
             "replied": False,
         }
-        result = await db.contacts.insert_one(contact_data)
+        await db.contacts.insert_one(contact_data)
 
         try:
             await asyncio.to_thread(
@@ -106,10 +106,10 @@ async def contact_form(data: ContactFormRequest, db: AsyncIOMotorClient = Depend
         return {
             "success": True,
             "message": "Your message has been sent. I will get back to you soon.",
-            "contact_id": str(result.inserted_id),
         }
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Server error while saving contact form: {exc}")
+        print(f"Contact form save failed: {exc}")
+        raise HTTPException(status_code=500, detail="Server error while saving contact form")
 
 
 @router.post("/subscribe", response_model=dict, status_code=status.HTTP_201_CREATED)
@@ -133,16 +133,16 @@ async def subscribe_newsletter(data: NewsletterSubscribeRequest, db: AsyncIOMoto
             "active": True,
             "source": data.source,
         }
-        result = await db.newsletter_subscribers.insert_one(subscriber_data)
+        await db.newsletter_subscribers.insert_one(subscriber_data)
         return {
             "success": True,
             "message": "Subscription successful. Thanks for following.",
-            "subscriber_id": str(result.inserted_id),
         }
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Server error while subscribing: {exc}")
+        print(f"Newsletter subscription failed: {exc}")
+        raise HTTPException(status_code=500, detail="Server error while subscribing")
 
 
 @router.get("/contacts", response_model=list[ContactItem])

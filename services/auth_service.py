@@ -11,8 +11,11 @@ from services.db_service import get_database
 
 # --- Configuration ---
 # You must set these in your .env file
-SECRET_KEY = os.getenv("SECRET_KEY", "a_default_secret_key_for_development")
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable must be set.")
+
+ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 
 # OAuth2 scheme
@@ -58,11 +61,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db = Depends(get
     return user
 
 async def get_current_admin_user(current_user: dict = Depends(get_current_user)):
-    """
-    Checks if the current user is an admin.
-    For now, we'll assume any logged-in user is an admin.
-    You can add a role field to your user model later.
-    """
-    # if current_user.get("role") != "admin":
-    #     raise HTTPException(status_code=403, detail="Not enough permissions")
+    """Checks if the current user is an admin."""
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not enough permissions")
     return current_user

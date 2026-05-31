@@ -1,9 +1,9 @@
 import os
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl
 from starlette.background import BackgroundTask
 
 from services.auth_service import get_current_admin_user
@@ -13,7 +13,7 @@ router = APIRouter()
 
 class CreateYtdlJobRequest(BaseModel):
     url: HttpUrl
-    format: str
+    format: str = Field(..., pattern=r"^[A-Za-z0-9_-]{1,32}$")
 
 
 def get_ytdl_config() -> tuple[str, str]:
@@ -49,7 +49,7 @@ async def create_ytdl_download(
     if response.status_code >= 400:
         raise HTTPException(
             status_code=response.status_code,
-            detail=response.text,
+            detail="Upstream tools service rejected the request.",
         )
 
     return response.json()
@@ -57,7 +57,7 @@ async def create_ytdl_download(
 
 @router.get("/tools/ytdl/downloads/{job_id}", summary="Get yt_dwler job status")
 async def get_ytdl_download(
-    job_id: str,
+    job_id: str = Path(..., pattern=r"^[A-Za-z0-9_-]{1,128}$"),
     current_user: dict = Depends(get_current_admin_user),
 ):
     base_url, api_key = get_ytdl_config()
@@ -71,7 +71,7 @@ async def get_ytdl_download(
     if response.status_code >= 400:
         raise HTTPException(
             status_code=response.status_code,
-            detail=response.text,
+            detail="Upstream tools service rejected the request.",
         )
 
     return response.json()
@@ -79,7 +79,7 @@ async def get_ytdl_download(
 
 @router.get("/tools/ytdl/downloads/{job_id}/file", summary="Proxy yt_dwler file")
 async def get_ytdl_file(
-    job_id: str,
+    job_id: str = Path(..., pattern=r"^[A-Za-z0-9_-]{1,128}$"),
     current_user: dict = Depends(get_current_admin_user),
 ):
     base_url, api_key = get_ytdl_config()
@@ -98,7 +98,7 @@ async def get_ytdl_file(
         await client.aclose()
         raise HTTPException(
             status_code=response.status_code,
-            detail=error_body.decode("utf-8", errors="replace"),
+            detail="Upstream tools service rejected the request.",
         )
 
     async def close_upstream() -> None:

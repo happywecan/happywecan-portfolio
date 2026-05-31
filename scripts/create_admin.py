@@ -17,9 +17,9 @@ load_dotenv()
 from models.user import UserModel
 
 # --- Database Connection ---
-MONGO_URI = os.getenv("MONGO_URI")
-if not MONGO_URI:
-    raise ValueError("MONGO_URI environment variable not set.")
+MONGODB_URI = os.getenv("MONGODB_URI")
+if not MONGODB_URI:
+    raise ValueError("MONGODB_URI environment variable not set.")
 
 async def create_admin_user():
     """
@@ -29,7 +29,7 @@ async def create_admin_user():
     try:
         # --- Connect to the database ---
         print("Connecting to the database...")
-        client = AsyncIOMotorClient(MONGO_URI)
+        client = AsyncIOMotorClient(MONGODB_URI)
         # In Motor, you select the database directly from the client
         db_name = client.get_database().name
         db = client[db_name]
@@ -54,10 +54,11 @@ async def create_admin_user():
 
         # --- Create user ---
         print(f"\nCreating user for email: {email}...")
-        user, error = user_model.create_user(
+        user, error = await user_model.create_user(
             email=email,
             password=password,
-            nickname=nickname or email.split('@')[0]
+            nickname=nickname or email.split('@')[0],
+            role='admin',
         )
 
         if error:

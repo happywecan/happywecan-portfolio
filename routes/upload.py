@@ -1,4 +1,7 @@
+from io import BytesIO
+
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
+from PIL import Image, UnidentifiedImageError
 from services.auth_service import get_current_admin_user
 import aiofiles
 import os
@@ -11,6 +14,8 @@ UPLOAD_DIR = "static/uploads"
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+UPLOAD_CHUNK_BYTES = 64 * 1024
+ALLOWED_IMAGE_FORMATS = {"JPEG", "PNG", "WEBP", "GIF"}
 
 @router.post("/upload", dependencies=[Depends(get_current_admin_user)])
 async def upload_image(file: UploadFile = File(...)):
@@ -33,16 +38,30 @@ async def upload_image(file: UploadFile = File(...)):
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
 
     try:
-        # Asynchronously write the file to the server's disk
-        async with aiofiles.open(file_path, 'wb') as out_file:
-            content = await file.read()  # Read file content
-            if len(content) > MAX_UPLOAD_BYTES:
+        chunks = []
+        size = 0
+        while chunk := await file.read(UPLOAD_CHUNK_BYTES):
+            size += len(chunk)
+            if size > MAX_UPLOAD_BYTES:
                 raise HTTPException(status_code=413, detail="File must be 5MB or smaller")
-            await out_file.write(content)  # Write content to file
+            chunks.append(chunk)
+
+        content = b"".join(chunks)
+        try:
+            with Image.open(BytesIO(content)) as image:
+                if image.format not in ALLOWED_IMAGE_FORMATS:
+                    raise HTTPException(status_code=400, detail="Unsupported image format")
+                image.verify()
+        except (UnidentifiedImageError, OSError):
+            raise HTTPException(status_code=400, detail="Invalid image file")
+
+        async with aiofiles.open(file_path, 'wb') as out_file:
+            await out_file.write(content)
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"There was an error uploading the file: {e}")
+        print(f"Image upload failed: {e}")
+        raise HTTPException(status_code=500, detail="There was an error uploading the file")
 
     # Return the relative path that the frontend can use
     relative_path = f"/{file_path.replace(os.path.sep, '/')}"

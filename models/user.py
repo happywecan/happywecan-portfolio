@@ -8,7 +8,7 @@ class UserModel:
     def __init__(self, db):
         self.collection = db['users']
 
-    async def create_user(self, email, password, nickname=None):
+    async def create_user(self, email, password, nickname=None, role='user'):
         # 檢查 email 是否已存在
         if await self.collection.find_one({'email': email}):
             return None, 'Email 已被註冊'
@@ -16,6 +16,7 @@ class UserModel:
             'email': email,
             'password_hash': pwd_context.hash(password),
             'nickname': nickname or '',
+            'role': role,
             'created_at': datetime.utcnow(),
             'last_login': None
         }

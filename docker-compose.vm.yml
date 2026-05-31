@@ -7,6 +7,7 @@ services:
     env_file:
       - .env
     environment:
+      ENVIRONMENT: production
       CORS_ORIGINS: https://angelo.happywecan.com
       MAIL_SERVER: smtp.gmail.com
       MAIL_PORT: "587"
