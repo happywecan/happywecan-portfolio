@@ -14,6 +14,7 @@ echo "$TOKEN" | sudo docker login -u oauth2accesstoken --password-stdin https://
 sudo install -d -o 10001 -g 10001 static/uploads
 sudo chown -R 10001:10001 static/uploads
 
-sudo docker compose -f docker-compose.vm-pull.yml pull
-sudo docker compose -f docker-compose.vm-pull.yml up -d
-sudo docker compose -f docker-compose.vm-pull.yml ps
+sudo --preserve-env=IMAGE_TAG docker compose -f docker-compose.vm-pull.yml pull
+sudo --preserve-env=IMAGE_TAG docker compose -f docker-compose.vm-pull.yml up -d
+sudo --preserve-env=IMAGE_TAG docker compose -f docker-compose.vm-pull.yml up -d --force-recreate nginx
+sudo --preserve-env=IMAGE_TAG docker compose -f docker-compose.vm-pull.yml ps

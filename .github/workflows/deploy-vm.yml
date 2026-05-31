@@ -73,9 +73,12 @@ jobs:
           gcloud compute scp scripts/deploy-vm-pull.sh \
             ${VM_NAME}:/tmp/deploy-vm-pull.sh \
             --zone=${VM_ZONE}
+          gcloud compute scp docs/nginx-vm.conf \
+            ${VM_NAME}:/tmp/nginx-vm.conf \
+            --zone=${VM_ZONE}
           gcloud compute ssh ${VM_NAME} \
             --zone=${VM_ZONE} \
-            --command="sudo cp /tmp/docker-compose.vm-pull.yml /home/Angelo/angelo20011016.github.io/docker-compose.vm-pull.yml && sudo chown Angelo:Angelo /home/Angelo/angelo20011016.github.io/docker-compose.vm-pull.yml"
+            --command="sudo cp /tmp/docker-compose.vm-pull.yml /home/Angelo/angelo20011016.github.io/docker-compose.vm-pull.yml && sudo cp /tmp/nginx-vm.conf /home/Angelo/angelo20011016.github.io/docs/nginx-vm.conf && sudo chown Angelo:Angelo /home/Angelo/angelo20011016.github.io/docker-compose.vm-pull.yml /home/Angelo/angelo20011016.github.io/docs/nginx-vm.conf"
 
       - name: Deploy on VM
         run: |
