@@ -9,10 +9,10 @@ Use the Mac mini Docker MongoDB only for the test environment. Keep production p
 On the test server, set `.env`:
 
 ```env
-MONGODB_URI="mongodb://angelo:<MONGO_TEST_PASSWORD>@100.90.120.55:27017/app_test?authSource=admin"
+MONGODB_URI="mongodb://angelo:<MONGO_TEST_PASSWORD>@<MAC_MINI_TAILSCALE_IP>:27017/app_test?authSource=admin"
 ```
 
-If the backend container runs on the same Mac mini Docker host, `localhost` from inside the backend container is not the MongoDB container. Use the Tailscale IP above, or put the backend and MongoDB into the same Docker Compose network and use the MongoDB service name.
+If the backend container runs on the same Mac mini Docker host, `localhost` from inside the backend container is not the MongoDB container. Use the current Tailscale IP above, or put the backend and MongoDB into the same Docker Compose network and use the MongoDB service name.
 
 ## Verify MongoDB
 

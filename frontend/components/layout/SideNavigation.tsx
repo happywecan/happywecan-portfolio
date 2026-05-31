@@ -17,6 +17,11 @@ const SideNavigation: React.FC = () => {
   const [activeSection, setActiveSection] = useState('hero');
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
+  const scrollHome = () => {
+    setActiveSection('hero');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const navItems = useMemo(() => (
     settings
       ? [
@@ -77,8 +82,9 @@ const SideNavigation: React.FC = () => {
           smooth={true}
           duration={800}
           spy={true}
+          onClick={item.id === 'hero' ? scrollHome : undefined}
           onSetActive={() => setActiveSection(item.id)}
-          className="relative cursor-pointer group flex items-center justify-end"
+          className="relative flex h-10 w-36 cursor-pointer items-center justify-end group"
         >
           <span className={`mr-5 font-mono text-xs font-bold uppercase tracking-[0.2em] opacity-0 transition-all duration-300 group-hover:opacity-100 md:text-sm ${activeSection === item.id ? 'translate-x-0 text-white opacity-100' : 'translate-x-2 text-white/40'}`}>
             {item.label}

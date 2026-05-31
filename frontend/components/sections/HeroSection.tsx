@@ -76,8 +76,9 @@ const HeroSection: React.FC = () => {
     }
   }, [loading, settings]);
 
-  if (loading) return null;
-  if (!settings) return null;
+  if (loading || !settings) {
+    return <section id="hero" className="relative min-h-screen w-full bg-background" />;
+  }
 
   return (
     <section id="hero" ref={containerRef} className="relative min-h-screen w-full flex flex-col justify-center items-center px-5 sm:px-8 overflow-hidden bg-background">

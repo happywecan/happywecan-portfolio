@@ -2,8 +2,6 @@
 
 This project can be developed from multiple machines while sharing one MongoDB test database on the Mac mini server.
 
-For Codex handoff on another machine, read `docs/codex-handoff.md` first.
-
 ## Environment Layout
 
 ```text
@@ -25,7 +23,7 @@ Rules:
 Mac mini MongoDB:
 
 ```text
-Host: 100.90.120.55
+Host: <MAC_MINI_TAILSCALE_IP>
 Port: 27017
 Database: app_test
 Container: homelab-mongodb-test
@@ -34,7 +32,7 @@ Container: homelab-mongodb-test
 Each development machine should have this in its local `.env`:
 
 ```env
-MONGODB_URI="mongodb://angelo:<MONGO_TEST_PASSWORD>@100.90.120.55:27017/app_test?authSource=admin"
+MONGODB_URI="mongodb://angelo:<MONGO_TEST_PASSWORD>@<MAC_MINI_TAILSCALE_IP>:27017/app_test?authSource=admin"
 ```
 
 Use `.env.example` as the template.

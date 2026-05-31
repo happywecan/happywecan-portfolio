@@ -58,6 +58,11 @@ export default function Home() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
+    if (!window.location.hash) {
+      window.history.scrollRestoration = "manual";
+      requestAnimationFrame(() => window.scrollTo(0, 0));
+    }
+
     let isMounted = true;
 
     const fetchSettings = async () => {

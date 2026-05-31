@@ -7,6 +7,7 @@ import Image from "next/image";
 import { SiteSettings, getSiteSettings } from "@/services/staticContentService";
 
 const defaultNavItems = [
+  { id: "hero", label: "home" },
   { id: "about", label: "about" },
   { id: "skills", label: "skills" },
   { id: "portfolio", label: "portfolio" },
@@ -22,6 +23,7 @@ export default function TopNavigation() {
 
   const navItems = settings
     ? [
+        { id: "hero", label: settings.nav_home_label || "home", enabled: settings.section_hero_enabled },
         { id: "about", label: settings.nav_about_label || "about", enabled: settings.section_about_enabled },
         { id: "skills", label: settings.nav_skills_label || "skills", enabled: settings.section_skills_enabled },
         { id: "portfolio", label: settings.nav_portfolio_label || "portfolio", enabled: settings.section_portfolio_enabled },
@@ -29,6 +31,10 @@ export default function TopNavigation() {
         { id: "contact", label: settings.nav_contact_label || "contact", enabled: settings.section_contact_enabled },
       ].filter((item) => item.enabled)
     : defaultNavItems;
+
+  const scrollHome = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   useEffect(() => {
     const controlNavbar = () => {
@@ -97,6 +103,7 @@ export default function TopNavigation() {
               to={item.id}
               smooth={true}
               duration={800}
+              onClick={item.id === "hero" ? scrollHome : undefined}
               className="group relative cursor-pointer font-mono text-sm font-bold uppercase tracking-[0.18em] text-white"
             >
               {item.label}

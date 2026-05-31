@@ -72,6 +72,7 @@ from routes.static_content import router as static_content_router
 from routes.upload import router as upload_router # Import the new upload router
 from routes.skill import router as skill_router # Import the new skill router
 from routes.hobby import router as hobby_router # Import the new hobby router
+from routes.tools_ytdl import router as tools_ytdl_router
 
 app.include_router(portfolio_router, prefix="/api")
 app.include_router(blog_router, prefix="/api")
@@ -82,6 +83,7 @@ app.include_router(static_content_router, prefix="/api")
 app.include_router(upload_router, prefix="/api") # Include the new upload router
 app.include_router(skill_router, prefix="/api") # Include the new skill router
 app.include_router(hobby_router, prefix="/api") # Include the new hobby router
+app.include_router(tools_ytdl_router, prefix="/api")
 
 
 @app.get("/healthz")

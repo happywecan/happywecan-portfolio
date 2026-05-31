@@ -37,6 +37,14 @@ const introSplashBootScript = `
     const path = window.location.pathname;
     if (path.startsWith("/admin") || path.startsWith("/login")) return;
 
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+
+    if (path === "/" && !window.location.hash) {
+      window.scrollTo(0, 0);
+    }
+
     const now = new Date();
     const today = [
       now.getFullYear(),
