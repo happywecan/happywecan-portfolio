@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { HeroSettings, getHeroSettings, updateHeroSettings } from '../../services/staticContentService';
 import { toast } from 'react-toastify';
-import { API_BASE_URL } from '../../services/authService';
+import { getErrorMessage } from '../../services/apiClient';
+import { uploadImage } from '../../services/uploadService';
 
 // Import the new Markdown editor
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
@@ -25,29 +26,14 @@ const ImageUploadField = ({ label, value, name, onUrlChange }: { label: string, 
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-
     setUploading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('File upload failed');
-      }
-
-      const data = await response.json();
-      onUrlChange(name, data.file_path);
+      const filePath = await uploadImage(file, token);
+      onUrlChange(name, filePath);
       toast.success("Image uploaded successfully!");
 
-    } catch (error: any) {
-      toast.error(error.message || "Failed to upload image.");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Failed to upload image."));
     } finally {
       setUploading(false);
     }
@@ -99,9 +85,10 @@ const HeroContentForm: React.FC = () => {
         setLoading(true);
         const data = await getHeroSettings();
         setSettings(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to load hero settings.");
-        toast.error(err.message || "Failed to load hero settings.");
+      } catch (err: unknown) {
+        const message = getErrorMessage(err, "Failed to load hero settings.");
+        setError(message);
+        toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -137,9 +124,10 @@ const HeroContentForm: React.FC = () => {
       const updatedSettings = await updateHeroSettings(settings, token);
       setSettings(updatedSettings);
       toast.success("Hero settings updated successfully!");
-    } catch (err: any) {
-      setError(err.message || "Failed to update hero settings.");
-      toast.error(err.message || "Failed to update hero settings.");
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, "Failed to update hero settings.");
+      setError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

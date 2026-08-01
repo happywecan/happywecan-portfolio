@@ -3,7 +3,7 @@
 ## Target architecture
 
 - Frontend: full Next.js runtime on Cloud Run.
-- Backend: FastAPI on Cloud Run.
+- Backend: Spring Boot on Cloud Run.
 - Database: keep the existing MongoDB Atlas database.
 - Upload storage: keep committed images for now; migrate future admin uploads to Cloud Storage.
 

@@ -1,5 +1,7 @@
-// Use environment variable for the API base URL, with a fallback for local development.
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { apiRequest, API_BASE_URL } from './apiClient';
+import type { AdminProfile, TokenResponse } from '@/types/api';
+
+export { API_BASE_URL };
 
 /**
  * Logs in a user.
@@ -12,21 +14,13 @@ export async function login(email: string, password: string) {
   params.append('username', email);
   params.append('password', password);
 
-  const response = await fetch(`${API_BASE_URL}/api/admin/token`, {
+  return apiRequest<TokenResponse>('/api/admin/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: params,
   });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to login');
-  }
-
-  const data = await response.json();
-  return data;
 }
 
 /**
@@ -35,18 +29,5 @@ export async function login(email: string, password: string) {
  * @returns The user's profile information.
  */
 export async function getAdminProfile(token: string) {
-  const response = await fetch(`${API_BASE_URL}/api/admin/me`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to fetch profile');
-  }
-
-  const data = await response.json();
-  return data;
+  return apiRequest<AdminProfile>('/api/admin/me', {}, token);
 }

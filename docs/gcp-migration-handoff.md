@@ -16,7 +16,7 @@ https://api.happywecan.com
 Current production architecture:
 
 ```txt
-Cloudflare -> GCP e2-micro VM -> Nginx -> Next.js / FastAPI -> MongoDB Atlas
+Cloudflare -> GCP e2-micro VM -> Nginx -> Next.js / Spring Boot -> MongoDB Atlas
 ```
 
 For the current VM deployment workflow, use:

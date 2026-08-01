@@ -1,0 +1,16 @@
+services:
+  backend-java:
+    build:
+      context: ./backend-java
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+      MONGODB_URI: "${MONGODB_URI:-mongodb://host.docker.internal:27017/portfolio}"
+      UPLOAD_DIR: "/app/uploads"
+      SECRET_KEY: "${SECRET_KEY:-change-this-development-secret-before-production-1234567890}"
+      CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:3000}"
+    ports:
+      - "8002:8080"
+    volumes:
+      - ./static/uploads:/app/uploads

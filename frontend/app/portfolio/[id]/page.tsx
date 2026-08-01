@@ -1,7 +1,7 @@
 import ContentDetailPage from "@/components/common/ContentDetailPage";
 import { API_BASE_URL } from "@/services/authService";
 
-const SERVER_API_BASE_URL = process.env.INTERNAL_API_URL || API_BASE_URL.replace("localhost:8001", "backend:8000");
+const SERVER_API_BASE_URL = process.env.INTERNAL_API_URL || API_BASE_URL;
 
 interface PortfolioItem {
   id?: string;

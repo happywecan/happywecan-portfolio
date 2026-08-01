@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { SiteSettings, getSiteSettings, updateSiteSettings } from '../../services/staticContentService';
 import { toast } from 'react-toastify';
-import { API_BASE_URL } from '../../services/authService';
+import { getErrorMessage } from '../../services/apiClient';
+import { uploadImage } from '../../services/uploadService';
 
 const ImageUploadField = ({ label, value, name, onUrlChange }: { label: string, value?: string, name: string, onUrlChange: (name: string, url: string) => void }) => {
   const [uploading, setUploading] = useState(false);
@@ -18,30 +19,14 @@ const ImageUploadField = ({ label, value, name, onUrlChange }: { label: string, 
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
     setUploading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'File upload failed' }));
-        throw new Error(errorData.detail || 'File upload failed');
-      }
-
-      const data = await response.json();
-      onUrlChange(name, data.file_path);
+      const filePath = await uploadImage(file, token);
+      onUrlChange(name, filePath);
       toast.success("Image uploaded successfully!");
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Failed to upload image.";
-      toast.error(message);
+      toast.error(getErrorMessage(error, "Failed to upload image."));
     } finally {
       setUploading(false);
     }

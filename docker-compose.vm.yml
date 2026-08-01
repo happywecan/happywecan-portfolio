@@ -1,8 +1,8 @@
 services:
   backend:
     build:
-      context: .
-      dockerfile: Dockerfile.backend
+      context: ./backend-java
+      dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
       - .env
@@ -12,8 +12,9 @@ services:
       MAIL_SERVER: smtp.gmail.com
       MAIL_PORT: "587"
       MAIL_USE_TLS: "True"
+      UPLOAD_DIR: /app/uploads
     volumes:
-      - ./static/uploads:/app/static/uploads
+      - ./static/uploads:/app/uploads
 
   frontend:
     build:
@@ -24,6 +25,7 @@ services:
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_API_URL: https://api.happywecan.com
+      INTERNAL_API_URL: http://backend:8080
     depends_on:
       - backend
 

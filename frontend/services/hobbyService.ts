@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './authService';
+import { apiRequest } from './apiClient';
 
 export interface Hobby {
   id?: string;
@@ -8,64 +8,12 @@ export interface Hobby {
   description?: string;
 }
 
-export async function getHobbies(): Promise<Hobby[]> {
-  const response = await fetch(`${API_BASE_URL}/api/hobbies`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+type HobbyPayload = Omit<Hobby, 'id' | '_id'>;
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch hobbies');
-  }
-  return response.json();
-}
-
-export async function createHobby(hobby: Omit<Hobby, 'id' | '_id'>, token: string): Promise<Hobby> {
-  const response = await fetch(`${API_BASE_URL}/api/hobbies`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(hobby),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to create hobby');
-  }
-  return response.json();
-}
-
-export async function updateHobby(id: string, hobby: Omit<Hobby, 'id' | '_id'>, token: string): Promise<Hobby> {
-  const response = await fetch(`${API_BASE_URL}/api/hobbies/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(hobby),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to update hobby');
-  }
-  return response.json();
-}
-
-export async function deleteHobby(id: string, token: string): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/api/hobbies/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to delete hobby');
-  }
-}
+export const getHobbies = () => apiRequest<Hobby[]>('/api/hobbies');
+export const createHobby = (hobby: HobbyPayload, token: string) =>
+  apiRequest<Hobby>('/api/hobbies', { method: 'POST', body: JSON.stringify(hobby) }, token);
+export const updateHobby = (id: string, hobby: HobbyPayload, token: string) =>
+  apiRequest<Hobby>(`/api/hobbies/${id}`, { method: 'PUT', body: JSON.stringify(hobby) }, token);
+export const deleteHobby = (id: string, token: string) =>
+  apiRequest<void>(`/api/hobbies/${id}`, { method: 'DELETE' }, token);

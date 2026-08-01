@@ -44,7 +44,6 @@ export default function DailyKeywordSplash() {
       return;
     }
 
-    let hideTimer: number | undefined;
     let cancelled = false;
 
     const finish = () => {
@@ -54,7 +53,7 @@ export default function DailyKeywordSplash() {
       setVisible(false);
     };
 
-    hideTimer = window.setTimeout(finish, TOTAL_DURATION_MS);
+    const hideTimer = window.setTimeout(finish, TOTAL_DURATION_MS);
 
     const loadSettings = async () => {
       try {

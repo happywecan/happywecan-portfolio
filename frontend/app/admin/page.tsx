@@ -9,6 +9,8 @@ import BlogManager from '@/components/admin/BlogManager';
 import SkillManager from '@/components/admin/SkillManager';
 import HobbyManager from '@/components/admin/HobbyManager';
 import ContactManager from '@/components/admin/ContactManager';
+import NewsletterManager from '@/components/admin/NewsletterManager';
+import { getAdminProfile } from '@/services/authService';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -18,15 +20,18 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for token on mount
     const token = localStorage.getItem('authToken');
     if (!token) {
       router.push('/login');
-    } else {
-      // Ideally, verify token validity with backend here
-      setIsAdmin(true);
-      setLoading(false);
+      return;
     }
+    void getAdminProfile(token)
+      .then(() => setIsAdmin(true))
+      .catch(() => {
+        localStorage.removeItem('authToken');
+        router.push('/login');
+      })
+      .finally(() => setLoading(false));
   }, [router]);
 
   const handleLogout = () => {
@@ -60,6 +65,7 @@ export default function AdminDashboard() {
         <PortfolioManager />
         <BlogManager />
         <ContactManager />
+        <NewsletterManager />
         <SkillManager />
         <HobbyManager /> {/* Added HobbyManager */}
 

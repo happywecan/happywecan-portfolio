@@ -12,10 +12,10 @@ steps:
     args:
       - build
       - -f
-      - Dockerfile.backend
+      - backend-java/Dockerfile
       - -t
       - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_API_SERVICE}:$BUILD_ID
-      - .
+      - ./backend-java
 
   - id: Build frontend image
     name: gcr.io/cloud-builders/docker
@@ -56,7 +56,7 @@ steps:
       - managed
       - --allow-unauthenticated
       - --port
-      - "8000"
+      - "8080"
       - --memory
       - 512Mi
       - --cpu
@@ -68,7 +68,7 @@ steps:
       - --set-env-vars
       - ENVIRONMENT=production,CORS_ORIGINS=${_FRONTEND_URL},MAIL_SERVER=smtp.gmail.com,MAIL_PORT=587,MAIL_USE_TLS=True
       - --set-secrets
-      - MONGODB_URI=MONGODB_URI:latest,SECRET_KEY=SECRET_KEY:latest,ADMIN_USER=ADMIN_USER:latest,ADMIN_PASSWORD=ADMIN_PASSWORD:latest,MAIL_USERNAME=MAIL_USERNAME:latest,MAIL_PASSWORD=MAIL_PASSWORD:latest
+      - MONGODB_URI=MONGODB_URI:latest,SECRET_KEY=SECRET_KEY:latest,MAIL_USERNAME=MAIL_USERNAME:latest,MAIL_PASSWORD=MAIL_PASSWORD:latest
 
   - id: Deploy frontend to Cloud Run
     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim

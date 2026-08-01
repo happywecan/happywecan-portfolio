@@ -4,7 +4,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRocket, faNewspaper, faSpinner } from '@fortawesome/free-solid-svg-icons';
-import { API_BASE_URL } from '../../services/authService';
+import { subscribeNewsletter } from '../../services/newsletterService';
+import { getErrorMessage } from '../../services/apiClient';
 
 const VisionAndNewsletter: React.FC = () => {
   const sectionRef = useRef(null);
@@ -71,28 +72,13 @@ const VisionAndNewsletter: React.FC = () => {
     setStatusMessage(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/subscribe`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, source: 'frontend_about_page' }), // Add source
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setIsSuccess(true);
-        setStatusMessage(data.message || '訂閱成功！感謝您的支持。');
-        setEmail(''); // Clear email input on success
-      } else {
-        setIsSuccess(false);
-        setStatusMessage(data.detail || data.message || '訂閱失敗，請稍後再試。');
-      }
-    } catch (error) {
-      console.error('訂閱請求失敗:', error);
+      const data = await subscribeNewsletter(email);
+      setIsSuccess(true);
+      setStatusMessage(data.message || '訂閱成功！感謝您的支持。');
+      setEmail('');
+    } catch (error: unknown) {
       setIsSuccess(false);
-      setStatusMessage('連接伺服器時出錯，請稍後再試。');
+      setStatusMessage(getErrorMessage(error, '連接伺服器時出錯，請稍後再試。'));
     } finally {
       setLoading(false);
     }

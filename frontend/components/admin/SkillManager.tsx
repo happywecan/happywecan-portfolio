@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { getSkills, createSkill, updateSkill, deleteSkill, Skill } from '../../services/skillService';
 import SkillForm from './SkillForm';
 import Modal from '../common/Modal'; // Using the existing Modal for the form
+import { getErrorMessage } from '../../services/apiClient';
 
 export default function SkillManager() {
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -22,9 +23,10 @@ export default function SkillManager() {
       setLoading(true);
       const data = await getSkills();
       setSkills(data);
-    } catch (err: any) {
-      setError(err.message);
-      toast.error(err.message);
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, 'Failed to fetch skills');
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -65,9 +67,10 @@ export default function SkillManager() {
       }
       fetchSkills(); // Refresh the list
       handleCloseModal();
-    } catch (err: any) {
-      setError(err.message);
-      toast.error(err.message);
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, 'Failed to save skill');
+      setError(message);
+      toast.error(message);
     }
   };
 
@@ -86,9 +89,10 @@ export default function SkillManager() {
       await deleteSkill(id, token);
       toast.success("Skill deleted successfully!");
       fetchSkills(); // Refresh the list
-    } catch (err: any) {
-      setError(err.message);
-      toast.error(err.message);
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, 'Failed to delete skill');
+      setError(message);
+      toast.error(message);
     }
   };
   

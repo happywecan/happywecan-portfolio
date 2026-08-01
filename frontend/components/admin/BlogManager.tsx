@@ -5,6 +5,7 @@ import Modal from '@/components/common/Modal';
 import BlogForm from '@/components/admin/BlogForm'; // Import the new BlogForm
 // Assume blogService exists with similar functions to portfolioService
 import { getBlogPostsAdmin, deleteBlogPost, createBlogPost, updateBlogPost } from '@/services/blogService'; 
+import { getErrorMessage } from '@/services/apiClient';
 
 // Define the type for a blog post item based on the backend model
 interface BlogPostItem {
@@ -43,8 +44,8 @@ export default function BlogManager() {
       // Assuming getBlogPostsAdmin fetches all posts including unpublished ones for admin
       const blogPosts = await getBlogPostsAdmin(token); // Pass the token here
       setItems(blogPosts);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch blog posts.');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to fetch blog posts.'));
     } finally {
       setLoading(false);
     }
@@ -85,17 +86,8 @@ export default function BlogManager() {
       }
       handleCloseModal();
       await fetchItems(); // Refresh data
-    } catch (err: any) {
-      let detail = 'Failed to save item.';
-      if (err.message) {
-        try {
-          const parsed = JSON.parse(err.message);
-          detail = JSON.stringify(parsed);
-        } catch {
-          detail = err.message;
-        }
-      }
-      setError(detail);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to save item.'));
     }
   };
 
@@ -113,8 +105,8 @@ export default function BlogManager() {
     try {
       await deleteBlogPost(id, token);
       setItems(items.filter(item => (item.id || item._id) !== id));
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete item.');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to delete item.'));
     }
   };
 

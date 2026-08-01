@@ -5,7 +5,7 @@ This is the guided deployment path for moving this project from Render to GCP.
 Target architecture:
 
 - `happywecan-frontend`: full Next.js runtime on Cloud Run
-- `happywecan-api`: FastAPI backend on Cloud Run
+- `happywecan-api`: Spring Boot backend on Cloud Run
 - MongoDB: keep the existing MongoDB Atlas database
 - Secrets: Google Secret Manager
 - Container images: Artifact Registry
@@ -53,7 +53,7 @@ https://docs.cloud.google.com/sdk/docs/install
 
 During installation:
 
-- Keep bundled Python enabled.
+- Use Java 21 and the Maven Wrapper from `backend-java`.
 - Allow the installer to add `gcloud` to PATH.
 - Open a new PowerShell window after installation.
 

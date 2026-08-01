@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { getPortfolioItems, deletePortfolioItem, createPortfolioItem, updatePortfolioItem, PortfolioPayload } from '@/services/portfolioService';
 import Modal from '@/components/common/Modal';
 import PortfolioForm from '@/components/admin/PortfolioForm';
+import { getErrorMessage } from '@/services/apiClient';
 
 // Define the type for a portfolio item based on the backend model
 interface PortfolioItem {
@@ -33,8 +34,8 @@ export default function PortfolioManager() {
       setLoading(true);
       const portfolioItems = await getPortfolioItems();
       setItems(portfolioItems);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch portfolio items.');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to fetch portfolio items.'));
     } finally {
       setLoading(false);
     }
@@ -87,20 +88,8 @@ export default function PortfolioManager() {
       }
       handleCloseModal();
       await fetchItems(); // Refresh data
-    } catch (err: any) {
-      // Try to get a more detailed error from the backend response
-      let detail = 'Failed to save item.';
-      if (err.message) {
-        try {
-          // The service throws the JSON error message, let's see if it's stringified JSON
-          const parsed = JSON.parse(err.message);
-          detail = JSON.stringify(parsed);
-        } catch {
-          // If not JSON, just use the message
-          detail = err.message;
-        }
-      }
-      setError(detail);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to save item.'));
     }
   };
 
@@ -118,8 +107,8 @@ export default function PortfolioManager() {
     try {
       await deletePortfolioItem(id, token);
       setItems(items.filter(item => (item.id || item._id) !== id));
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete item.');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to delete item.'));
     }
   };
 

@@ -1,101 +1,43 @@
-import { API_BASE_URL } from './authService';
+import { apiRequest } from './apiClient';
+import type { PortfolioItem, PortfolioLink } from '@/types/api';
 
 export interface PortfolioPayload {
   title: string;
   description: string;
-  image_url: string;
-  content: string;
-  links?: { label: string; url: string }[];
+  image_url?: string;
+  content?: string;
+  github_url?: string;
+  demo_url?: string;
+  links?: PortfolioLink[];
   tags?: string[];
 }
 
-/**
- * Fetches all portfolio items.
- * This is a public endpoint and does not require a token.
- * @returns A list of portfolio items.
- */
-export async function getPortfolioItems() {
-  const response = await fetch(`${API_BASE_URL}/api/portfolio`, {
-    method: 'GET',
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to fetch portfolio items');
-  }
-
-  const data = await response.json();
-  return data;
+export function getPortfolioItems(): Promise<PortfolioItem[]> {
+  return apiRequest<PortfolioItem[]>('/api/portfolio');
 }
 
-/**
- * Creates a new portfolio item.
- * This is a protected endpoint and requires a token.
- * @param item - The portfolio item data to create.
- * @param token - The JWT access token.
- */
-export async function createPortfolioItem(item: PortfolioPayload, token: string) {
-    const response = await fetch(`${API_BASE_URL}/api/portfolio`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(item),
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to create portfolio item');
-    }
-
-    return await response.json();
+export function createPortfolioItem(
+  item: PortfolioPayload,
+  token: string,
+): Promise<PortfolioItem> {
+  return apiRequest<PortfolioItem>('/api/portfolio', {
+    method: 'POST',
+    body: JSON.stringify(item),
+  }, token);
 }
 
-/**
- * Updates an existing portfolio item.
- * This is a protected endpoint and requires a token.
- * @param id - The ID of the portfolio item to update.
- * @param item - The portfolio item data to update.
- * @param token - The JWT access token.
- */
-export async function updatePortfolioItem(id: string, item: PortfolioPayload, token: string) {
-    const response = await fetch(`${API_BASE_URL}/api/portfolio/${id}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(item),
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to update portfolio item');
-    }
-
-    return await response.json();
+export function updatePortfolioItem(
+  id: string,
+  item: PortfolioPayload,
+  token: string,
+): Promise<PortfolioItem> {
+  return apiRequest<PortfolioItem>(`/api/portfolio/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(item),
+  }, token);
 }
 
-/**
- * Deletes a portfolio item.
- * This is a protected endpoint and requires a token.
- * @param id - The ID of the portfolio item to delete.
- * @param token - The JWT access token.
- */
-export async function deletePortfolioItem(id: string, token: string) {
-    const response = await fetch(`${API_BASE_URL}/api/portfolio/${id}`, {
-        method: 'DELETE',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-        },
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to delete portfolio item');
-    }
-
-    // A 204 No Content response won't have a body to parse
-    return response.status === 204;
+export async function deletePortfolioItem(id: string, token: string): Promise<boolean> {
+  await apiRequest<void>(`/api/portfolio/${id}`, { method: 'DELETE' }, token);
+  return true;
 }

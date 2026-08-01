@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './authService';
+import { apiRequest } from './apiClient';
 
 export interface ContactItem {
   id: string;
@@ -10,39 +10,34 @@ export interface ContactItem {
   replied: boolean;
 }
 
-export async function getContactsAdmin(token: string): Promise<ContactItem[]> {
-  const response = await fetch(`${API_BASE_URL}/api/contacts`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch contacts' }));
-    throw new Error(errorData.detail || 'Failed to fetch contacts');
-  }
-
-  return response.json();
+export interface ContactSubmissionResponse {
+  success: boolean;
+  message: string;
+  contact_id: string;
 }
 
-export async function updateContactStatus(
+export function submitContact(data: { name: string; email: string; message: string }) {
+  return apiRequest<ContactSubmissionResponse>('/api/contactme', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function getContactsAdmin(token: string): Promise<ContactItem[]> {
+  return apiRequest<ContactItem[]>('/api/contacts', {}, token);
+}
+
+export function updateContactStatus(
   id: string,
   updates: { read?: boolean; replied?: boolean },
-  token: string
+  token: string,
 ): Promise<ContactItem> {
-  const response = await fetch(`${API_BASE_URL}/api/contacts/${id}`, {
+  return apiRequest<ContactItem>(`/api/contacts/${id}`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
     body: JSON.stringify(updates),
-  });
+  }, token);
+}
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ detail: 'Failed to update contact status' }));
-    throw new Error(errorData.detail || 'Failed to update contact status');
-  }
-
-  return response.json();
+export function deleteContact(id: string, token: string): Promise<void> {
+  return apiRequest<void>(`/api/contacts/${id}`, { method: 'DELETE' }, token);
 }

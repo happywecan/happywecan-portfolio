@@ -5,6 +5,7 @@ import { Splide, SplideSlide } from '@splidejs/react-splide';
 import '@splidejs/react-splide/css'; // Default theme for Splide
 import DetailModal from '../common/DetailModal'; // Import DetailModal
 import { API_BASE_URL } from '../../services/authService';
+import { getPortfolioItems } from '../../services/portfolioService';
 
 interface PortfolioItem {
   id: string;
@@ -34,11 +35,7 @@ const PortfolioCarousel: React.FC = () => {
   useEffect(() => {
     const fetchPortfolio = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/portfolio`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data: PortfolioItem[] = await response.json();
+        const data = await getPortfolioItems() as PortfolioItem[];
         
         // Prepend the API base URL to each image_url
         const itemsWithFullImageUrls = data.map(item => ({

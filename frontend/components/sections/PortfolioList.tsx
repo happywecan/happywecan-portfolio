@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_BASE_URL } from '../../services/authService';
 import { SiteSettings, getSiteSettings } from '../../services/staticContentService';
+import { getPortfolioItems } from '../../services/portfolioService';
 
 interface PortfolioItem {
   id: string;
@@ -36,9 +37,7 @@ const PortfolioList: React.FC = () => {
 
     const fetchPortfolio = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/portfolio`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data: PortfolioItem[] = await response.json();
+        const data = await getPortfolioItems() as PortfolioItem[];
         const itemsWithFullImageUrls = data.map(item => ({
           ...item,
           image_url: getAssetUrl(item.image_url)

@@ -1,13 +1,29 @@
 services:
   backend:
     build:
-      context: .
-      dockerfile: Dockerfile.backend
+      context: ./backend-java
+      dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      PORT: "8080"
+      UPLOAD_DIR: "/app/uploads"
+      CORS_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
     ports:
-      - "8001:8000"
+      - "8001:8080"
+    volumes:
+      - ./static/uploads:/app/uploads
+
+  backend-python:
+    profiles: ["legacy-python"]
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    env_file:
+      - .env
+    ports:
+      - "8002:8000"
     volumes:
       - ./static/uploads:/app/static/uploads
 
@@ -15,19 +31,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8001
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8001
+      INTERNAL_API_URL: http://backend:8080
       WATCHPACK_POLLING: "true"
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - frontend_node_modules:/app/node_modules
-      - frontend_next:/app/.next
     depends_on:
       - backend
-
-volumes:
-  frontend_node_modules:
-  frontend_next:

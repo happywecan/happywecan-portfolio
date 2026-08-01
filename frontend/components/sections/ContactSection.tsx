@@ -3,8 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Magnetic from '../common/Magnetic';
-import { API_BASE_URL } from '../../services/authService';
 import { SiteSettings, getSiteSettings } from '../../services/staticContentService';
+import { submitContact } from '../../services/contactService';
+import { getErrorMessage } from '../../services/apiClient';
 
 const ContactSection: React.FC = () => {
   const [name, setName] = useState('');
@@ -50,24 +51,13 @@ const ContactSection: React.FC = () => {
     setStatusMessage(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/contactme`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, message }),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        setIsSuccess(true);
-        setStatusMessage(data.message || 'SUCCESS!');
-        setName(''); setEmail(''); setMessage('');
-      } else {
-        setIsSuccess(false);
-        setStatusMessage(data.detail || 'ERROR');
-      }
-    } catch {
+      const data = await submitContact({ name, email, message });
+      setIsSuccess(true);
+      setStatusMessage(data.message || 'SUCCESS!');
+      setName(''); setEmail(''); setMessage('');
+    } catch (cause: unknown) {
       setIsSuccess(false);
-      setStatusMessage('SERVER ERROR');
+      setStatusMessage(getErrorMessage(cause, 'SERVER ERROR'));
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { getHobbies, createHobby, updateHobby, deleteHobby, Hobby } from '../../services/hobbyService';
 import HobbyForm from './HobbyForm';
 import Modal from '../common/Modal';
+import { getErrorMessage } from '../../services/apiClient';
 
 export default function HobbyManager() {
   const [hobbies, setHobbies] = useState<Hobby[]>([]);
@@ -22,9 +23,10 @@ export default function HobbyManager() {
       setLoading(true);
       const data = await getHobbies();
       setHobbies(data);
-    } catch (err: any) {
-      setError(err.message);
-      toast.error(err.message);
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, 'Failed to fetch hobbies');
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -63,9 +65,10 @@ export default function HobbyManager() {
       }
       fetchHobbies();
       handleCloseModal();
-    } catch (err: any) {
-      setError(err.message);
-      toast.error(err.message);
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, 'Failed to save hobby');
+      setError(message);
+      toast.error(message);
     }
   };
 
@@ -84,9 +87,10 @@ export default function HobbyManager() {
       await deleteHobby(id, token);
       toast.success("Hobby deleted successfully!");
       fetchHobbies();
-    } catch (err: any) {
-      setError(err.message);
-      toast.error(err.message);
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, 'Failed to delete hobby');
+      setError(message);
+      toast.error(message);
     }
   };
 

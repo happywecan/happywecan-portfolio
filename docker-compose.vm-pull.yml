@@ -10,14 +10,16 @@ services:
       MAIL_SERVER: smtp.gmail.com
       MAIL_PORT: "587"
       MAIL_USE_TLS: "True"
+      UPLOAD_DIR: /app/uploads
     volumes:
-      - ./static/uploads:/app/static/uploads
+      - ./static/uploads:/app/uploads
 
   frontend:
     image: asia-east1-docker.pkg.dev/focal-freedom-473403-f8/happywecan/happywecan-frontend:${IMAGE_TAG:-main}
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_API_URL: https://api.happywecan.com
+      INTERNAL_API_URL: http://backend:8080
     depends_on:
       - backend
 

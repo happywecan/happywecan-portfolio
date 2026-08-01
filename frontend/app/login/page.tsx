@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { login } from '@/services/authService';
+import { getErrorMessage } from '@/services/apiClient';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -30,8 +31,8 @@ export default function LoginPage() {
         // Redirect to a protected admin page
         router.push('/admin');
       }
-    } catch (err: any) {
-      setError(err.message || 'An unknown error occurred.');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'An unknown error occurred.'));
     } finally {
       setLoading(false);
     }
@@ -44,13 +45,14 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="email" className="text-sm font-medium text-gray-400">
-              Email
+              Username / Email
             </label>
             <input
               id="email"
               name="email"
-              type="email"
-              autoComplete="email"
+              type="text"
+              autoComplete="username"
+              placeholder="angelo1016"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}

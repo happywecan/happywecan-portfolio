@@ -2,7 +2,7 @@
 
 This project can move from Render to GCP with two Cloud Run services. This keeps the full Next.js runtime instead of flattening the frontend into a static-only deployment:
 
-- `happywecan-api`: FastAPI backend, built from `Dockerfile.backend`
+- `happywecan-api`: Spring Boot backend, built from `backend-java/Dockerfile`
 - `happywecan-frontend`: Next.js frontend, built from `frontend/Dockerfile`
 
 The current production MongoDB connection can stay on MongoDB Atlas. Cloud Run only hosts the containers.

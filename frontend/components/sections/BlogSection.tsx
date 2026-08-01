@@ -5,17 +5,12 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { API_BASE_URL } from '../../services/authService';
 import { SiteSettings, getSiteSettings } from '../../services/staticContentService';
+import { getPublishedBlogPosts } from '../../services/blogService';
+import type { BlogPost } from '@/types/api';
 
-interface BlogPostItem {
-  id: string;
-  title: string;
+interface BlogPostItem extends BlogPost {
   description?: string;
   imageUrl?: string;
-  content?: string;
-  tags?: string[];
-  published_at?: string;
-  cover_image?: string;
-  subtitle?: string;
 }
 
 function getAssetUrl(url?: string): string | undefined {
@@ -45,13 +40,11 @@ const BlogSection: React.FC = () => {
 
     const fetchBlogPosts = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/blog?publishedOnly=true`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data: BlogPostItem[] = await response.json();
+        const data = await getPublishedBlogPosts();
         const formattedData = data.map(post => ({
           ...post,
-          imageUrl: getAssetUrl(post.imageUrl || post.cover_image),
-          description: post.description || post.subtitle,
+          imageUrl: getAssetUrl(post.cover_image),
+          description: post.subtitle,
         }));
         if (isMounted) {
           setBlogPosts(formattedData);

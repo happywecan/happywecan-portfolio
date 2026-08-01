@@ -2,10 +2,11 @@ services:
   - type: web
     name: happywecan-api
     env: docker
-    dockerfilePath: ./Dockerfile.backend
+    dockerfilePath: ./backend-java/Dockerfile
+    dockerContext: ./backend-java
     plan: free
     autoDeployTrigger: checksPass
-    healthCheckPath: /healthz
+    healthCheckPath: /actuator/health/readiness
     envVars:
       - key: MONGODB_URI
         sync: false
@@ -15,10 +16,6 @@ services:
         value: production
       - key: CORS_ORIGINS
         value: https://angelo.happywecan.com
-      - key: ADMIN_USER
-        sync: false
-      - key: ADMIN_PASSWORD
-        sync: false
       - key: MAIL_USERNAME
         sync: false
       - key: MAIL_PASSWORD

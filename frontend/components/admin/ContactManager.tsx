@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { ContactItem, getContactsAdmin, updateContactStatus } from '@/services/contactService';
+import { ContactItem, deleteContact, getContactsAdmin, updateContactStatus } from '@/services/contactService';
 
 export default function ContactManager() {
   const [contacts, setContacts] = useState<ContactItem[]>([]);
@@ -49,6 +49,17 @@ export default function ContactManager() {
     }
   };
 
+  const handleDelete = async (item: ContactItem) => {
+    const token = localStorage.getItem('authToken');
+    if (!token || !window.confirm(`Delete message from ${item.email}?`)) return;
+    try {
+      await deleteContact(item.id, token);
+      setContacts(previous => previous.filter(contact => contact.id !== item.id));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to delete contact');
+    }
+  };
+
   if (loading && contacts.length === 0) {
     return <div className="text-center text-gray-400">Loading contacts...</div>;
   }
@@ -77,6 +88,7 @@ export default function ContactManager() {
               <th className="px-6 py-3">Message</th>
               <th className="px-6 py-3">Read</th>
               <th className="px-6 py-3">Replied</th>
+              <th className="px-6 py-3">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -105,11 +117,16 @@ export default function ContactManager() {
                       className="h-5 w-5"
                     />
                   </td>
+                  <td className="px-6 py-4">
+                    <button className="text-red-400 hover:text-red-300" onClick={() => void handleDelete(item)}>
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-gray-400">
+                <td colSpan={7} className="px-6 py-4 text-center text-gray-400">
                   No contact messages found.
                 </td>
               </tr>

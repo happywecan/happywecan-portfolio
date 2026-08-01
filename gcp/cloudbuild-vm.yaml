@@ -12,10 +12,10 @@ steps:
     args:
       - build
       - -f
-      - Dockerfile.backend
+      - backend-java/Dockerfile
       - -t
       - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_API_SERVICE}:${_IMAGE_TAG}
-      - .
+      - ./backend-java
 
   - id: Build frontend image
     name: gcr.io/cloud-builders/docker
