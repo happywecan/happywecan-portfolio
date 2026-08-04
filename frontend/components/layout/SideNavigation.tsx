@@ -74,7 +74,10 @@ const SideNavigation: React.FC = () => {
   }, [navItems]);
 
   return (
-    <nav className="fixed right-8 top-1/2 z-50 hidden -translate-y-1/2 flex-col space-y-5 mix-blend-difference md:flex xl:right-12">
+    <nav
+      aria-label="Section navigation"
+      className="fixed right-8 top-1/2 z-50 hidden -translate-y-1/2 flex-col gap-2 text-white mix-blend-difference md:flex xl:right-12"
+    >
       {navItems.map((item) => (
         <ScrollLink
           key={item.id}
@@ -84,13 +87,23 @@ const SideNavigation: React.FC = () => {
           spy={true}
           onClick={item.id === 'hero' ? scrollHome : undefined}
           onSetActive={() => setActiveSection(item.id)}
-          className="relative flex h-10 w-36 cursor-pointer items-center justify-end group"
+          aria-label={`Go to ${item.label}`}
+          aria-current={activeSection === item.id ? 'location' : undefined}
+          className={`group relative flex h-10 w-36 cursor-pointer items-center justify-end rounded-full px-2 transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current ${
+            activeSection === item.id ? 'bg-white/10' : 'hover:bg-white/5'
+          }`}
         >
-          <span className={`mr-5 font-mono text-xs font-bold uppercase tracking-[0.2em] opacity-0 transition-all duration-300 group-hover:opacity-100 md:text-sm ${activeSection === item.id ? 'translate-x-0 text-white opacity-100' : 'translate-x-2 text-white/40'}`}>
+          <span className={`mr-4 font-mono text-xs font-bold uppercase transition-all duration-300 md:text-sm ${
+            activeSection === item.id
+              ? 'translate-x-0 tracking-[0.22em] opacity-100'
+              : 'translate-x-0.5 tracking-[0.16em] opacity-60 group-hover:translate-x-0 group-hover:opacity-100'
+          }`}>
             {item.label}
           </span>
-          <div className="relative h-9 w-[2px] overflow-hidden bg-white/15 transition-all duration-500">
-             <div className={`absolute left-0 top-0 h-full w-full origin-top bg-white transition-transform duration-500 ${activeSection === item.id ? 'scale-y-100' : 'scale-y-0'}`}></div>
+          <div className={`relative overflow-hidden rounded-full bg-current transition-all duration-500 ${
+            activeSection === item.id ? 'h-7 w-[3px] opacity-100' : 'h-1.5 w-1.5 opacity-45 group-hover:opacity-80'
+          }`}>
+            <div className={`absolute inset-0 origin-center bg-current transition-transform duration-500 ${activeSection === item.id ? 'scale-y-100' : 'scale-y-0'}`}></div>
           </div>
         </ScrollLink>
       ))}
