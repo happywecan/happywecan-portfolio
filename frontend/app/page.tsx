@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import EditorialLanding from "@/components/sections/EditorialLanding";
 import HeroSection from "@/components/sections/HeroSection";
 import PortfolioSection from "@/components/sections/PortfolioSection";
 import BlogSection from "@/components/sections/BlogSection";
@@ -33,6 +34,8 @@ function buildSections(settings: SiteSettings | null) {
   ] satisfies Array<{ id: HomeSectionId; enabled: boolean; order: number }>;
 }
 
+// Kept for compatibility with the admin-controlled section model.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function renderHomeSection(id: HomeSectionId) {
   switch (id) {
     case "hero":
@@ -82,6 +85,7 @@ export default function Home() {
     };
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const sections = useMemo(
     () => buildSections(settings)
       .filter((section) => section.enabled)
@@ -89,11 +93,5 @@ export default function Home() {
     [settings]
   );
 
-  return (
-    <div className="flex flex-col">
-      {sections.map((section) => (
-        <div key={section.id}>{renderHomeSection(section.id)}</div>
-      ))}
-    </div>
-  );
+  return <EditorialLanding />;
 }

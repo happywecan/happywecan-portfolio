@@ -22,6 +22,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Editorial portfolio system */
+
 html.intro-splash-pending,
 html.intro-splash-pending body {
   background: #000000;
