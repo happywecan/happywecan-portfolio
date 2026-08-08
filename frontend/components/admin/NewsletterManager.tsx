@@ -1,83 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from 'react';
-import {
-  deleteSubscriber,
-  getSubscribers,
-  NewsletterSubscriber,
-  setSubscriberActive,
-} from '@/services/newsletterService';
-import { getErrorMessage } from '@/services/apiClient';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Power, Trash2 } from "lucide-react";
+import { deleteSubscriber, getSubscribers, NewsletterSubscriber, setSubscriberActive } from "@/services/newsletterService";
+import { getErrorMessage } from "@/services/apiClient";
+import { AdminAlert, AdminPanel, ConfirmDialog, EmptyState, SearchField, StatusBadge, tableCell, tableHeader } from "@/components/admin/shell/AdminUi";
 
 export default function NewsletterManager() {
-  const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  const refresh = useCallback(async () => {
-    try {
-      setSubscribers(await getSubscribers(localStorage.getItem('authToken') || ''));
-      setError(null);
-    } catch (cause: unknown) {
-      setError(getErrorMessage(cause, 'Failed to load newsletter subscribers.'));
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  const toggle = async (subscriber: NewsletterSubscriber) => {
-    try {
-      const updated = await setSubscriberActive(
-        subscriber.id,
-        !subscriber.active,
-        localStorage.getItem('authToken') || '',
-      );
-      setSubscribers(items => items.map(item => item.id === updated.id ? updated : item));
-    } catch (cause: unknown) {
-      setError(getErrorMessage(cause, 'Failed to update subscriber.'));
-    }
-  };
-
-  const remove = async (subscriber: NewsletterSubscriber) => {
-    if (!window.confirm(`Delete subscriber ${subscriber.email}?`)) return;
-    try {
-      await deleteSubscriber(subscriber.id, localStorage.getItem('authToken') || '');
-      setSubscribers(items => items.filter(item => item.id !== subscriber.id));
-    } catch (cause: unknown) {
-      setError(getErrorMessage(cause, 'Failed to delete subscriber.'));
-    }
-  };
-
-  return (
-    <section className="mt-8 rounded-lg bg-gray-800 p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xl font-bold">Newsletter Subscribers</h2>
-        <span className="text-sm text-gray-400">{subscribers.filter(item => item.active).length} active</span>
-      </div>
-      {error && <p className="mb-4 text-red-400">{error}</p>}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="text-gray-400">
-            <tr><th className="py-2">Email</th><th>Source</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            {subscribers.map(subscriber => (
-              <tr key={subscriber.id} className="border-t border-gray-700">
-                <td className="py-3">{subscriber.email}</td>
-                <td>{subscriber.source}</td>
-                <td>{subscriber.active ? 'Active' : 'Inactive'}</td>
-                <td className="space-x-2">
-                  <button className="text-amber-300" onClick={() => void toggle(subscriber)}>
-                    {subscriber.active ? 'Deactivate' : 'Activate'}
-                  </button>
-                  <button className="text-red-400" onClick={() => void remove(subscriber)}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  );
+  const [subscribers, setSubscribers] = useState<NewsletterSubscriber[]>([]); const [error, setError] = useState<string | null>(null); const [query, setQuery] = useState(""); const [deletingItem, setDeletingItem] = useState<NewsletterSubscriber | null>(null);
+  const refresh = useCallback(async () => { try { setError(null); setSubscribers(await getSubscribers(localStorage.getItem("authToken") || "")); } catch (cause) { setError(getErrorMessage(cause, "無法載入訂閱者。")); } }, []);
+  useEffect(() => { void refresh(); }, [refresh]);
+  const filtered = useMemo(() => subscribers.filter(item => `${item.email} ${item.source}`.toLowerCase().includes(query.toLowerCase())), [subscribers, query]);
+  const toggle = async (subscriber: NewsletterSubscriber) => { try { const updated = await setSubscriberActive(subscriber.id, !subscriber.active, localStorage.getItem("authToken") || ""); setSubscribers(items => items.map(item => item.id === updated.id ? updated : item)); } catch (cause) { setError(getErrorMessage(cause, "無法更新訂閱者狀態。")); } };
+  const remove = async () => { if (!deletingItem) return; try { await deleteSubscriber(deletingItem.id, localStorage.getItem("authToken") || ""); setSubscribers(items => items.filter(item => item.id !== deletingItem.id)); } catch (cause) { setError(getErrorMessage(cause, "無法刪除訂閱者。")); } finally { setDeletingItem(null); } };
+  return <><AdminPanel><div className="flex flex-col gap-3 border-b border-zinc-200 p-5 sm:flex-row sm:items-center sm:justify-between"><SearchField value={query} onChange={setQuery} placeholder="搜尋信箱或來源" /><span className="text-sm text-zinc-500">{subscribers.filter(item => item.active).length} 位有效訂閱者</span></div>{error && <div className="px-5 pt-5"><AdminAlert>{error}</AdminAlert></div>}{filtered.length === 0 ? <EmptyState title={query ? "沒有符合的訂閱者" : "還沒有訂閱者"} description="新的訂閱會顯示在這裡。" /> : <div className="overflow-x-auto"><table className="min-w-full"><thead className="border-b border-zinc-200 bg-zinc-50"><tr><th className={tableHeader}>電子信箱</th><th className={tableHeader}>來源</th><th className={tableHeader}>狀態</th><th className={`${tableHeader} text-right`}>操作</th></tr></thead><tbody className="divide-y divide-zinc-100">{filtered.map(item => <tr key={item.id} className="hover:bg-zinc-50"><td className={`${tableCell} font-medium text-zinc-900`}>{item.email}</td><td className={tableCell}>{item.source}</td><td className={tableCell}><StatusBadge tone={item.active ? "success" : "neutral"}>{item.active ? "有效" : "已停用"}</StatusBadge></td><td className={`${tableCell} whitespace-nowrap text-right`}><button onClick={() => void toggle(item)} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950" aria-label={item.active ? "停用訂閱者" : "啟用訂閱者"}><Power size={17} /></button><button onClick={() => setDeletingItem(item)} className="ml-1 rounded-lg p-2 text-zinc-500 hover:bg-red-50 hover:text-red-600" aria-label={`刪除 ${item.email}`}><Trash2 size={17} /></button></td></tr>)}</tbody></table></div>}</AdminPanel><ConfirmDialog open={Boolean(deletingItem)} title="刪除訂閱者？" description={`${deletingItem?.email || ""} 將從訂閱名單永久移除。`} onCancel={() => setDeletingItem(null)} onConfirm={() => void remove()} /></>;
 }

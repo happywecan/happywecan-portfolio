@@ -1,191 +1,22 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import Modal from '@/components/common/Modal';
-import BlogForm from '@/components/admin/BlogForm'; // Import the new BlogForm
-// Assume blogService exists with similar functions to portfolioService
-import { getBlogPostsAdmin, deleteBlogPost, createBlogPost, updateBlogPost } from '@/services/blogService'; 
-import { getErrorMessage } from '@/services/apiClient';
+import { useEffect, useMemo, useState } from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import Modal from "@/components/common/Modal";
+import BlogForm from "@/components/admin/BlogForm";
+import { createBlogPost, deleteBlogPost, getBlogPostsAdmin, updateBlogPost } from "@/services/blogService";
+import { getErrorMessage } from "@/services/apiClient";
+import { AdminAlert, AdminPanel, ConfirmDialog, EmptyState, primaryButton, SearchField, StatusBadge, tableCell, tableHeader } from "@/components/admin/shell/AdminUi";
 
-// Define the type for a blog post item based on the backend model
-interface BlogPostItem {
-  id?: string;
-  _id?: string;
-  title: string;
-  subtitle?: string;
-  content?: string;
-  cover_image?: string;
-  tags: string[];
-  is_published: boolean;
-  published_at?: string;
-  created_at: string;
-  updated_at?: string;
-}
+interface BlogPostItem { id?: string; _id?: string; title: string; subtitle?: string; content?: string; cover_image?: string; tags: string[]; is_published: boolean; published_at?: string; created_at: string; updated_at?: string; }
 
 export default function BlogManager() {
-  const [items, setItems] = useState<BlogPostItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // State for the modal and form
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<BlogPostItem | null>(null);
-
-  const fetchItems = async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-        setError('You are not authenticated. Please log in again.');
-        setLoading(false);
-        return;
-    }
-
-    try {
-      setLoading(true);
-      // Assuming getBlogPostsAdmin fetches all posts including unpublished ones for admin
-      const blogPosts = await getBlogPostsAdmin(token); // Pass the token here
-      setItems(blogPosts);
-    } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Failed to fetch blog posts.'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchItems();
-  }, []);
-
-  const handleAddNew = () => {
-    setEditingItem(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEdit = (item: BlogPostItem) => {
-    setEditingItem(item);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingItem(null);
-  };
-
-  const handleSave = async (cleanItemData: Omit<BlogPostItem, 'id' | 'created_at' | 'updated_at'>) => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      setError('You are not authenticated. Please log in again.');
-      return;
-    }
-
-    try {
-      const id = editingItem?.id || editingItem?._id;
-      if (editingItem && id) {
-        await updateBlogPost(id, cleanItemData, token);
-      } else {
-        await createBlogPost(cleanItemData, token);
-      }
-      handleCloseModal();
-      await fetchItems(); // Refresh data
-    } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Failed to save item.'));
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this blog post?')) {
-      return;
-    }
-
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      setError('You are not authenticated. Please log in again.');
-      return;
-    }
-
-    try {
-      await deleteBlogPost(id, token);
-      setItems(items.filter(item => (item.id || item._id) !== id));
-    } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Failed to delete item.'));
-    }
-  };
-
-  if (loading && items.length === 0) {
-    return <div className="text-center text-gray-400">Loading blog posts...</div>;
-  }
-
-  return (
-    <div className="mt-8 bg-gray-800/50 p-6 rounded-lg">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-2xl font-bold text-white">Manage Blog Posts</h3>
-        <button 
-          onClick={handleAddNew}
-          className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
-          + Add New Post
-        </button>
-      </div>
-
-      {error && <div className="my-4 text-center text-red-400 bg-red-900/20 p-3 rounded-md">Error: {error}</div>}
-      
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm text-left text-gray-300">
-          <thead className="text-xs text-gray-400 uppercase bg-gray-700/50">
-            <tr>
-              <th scope="col" className="px-6 py-3">Title</th>
-              <th scope="col" className="px-6 py-3">Published</th>
-              <th scope="col" className="px-6 py-3">Tags</th>
-              <th scope="col" className="px-6 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.length > 0 ? (
-              items.map((item, index) => {
-                const itemId = item.id || item._id;
-                return (
-                <tr key={itemId || index} className="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
-                  <th scope="row" className="px-6 py-4 font-medium text-white whitespace-nowrap">
-                    {item.title}
-                  </th>
-                  <td className="px-6 py-4">
-                    {item.is_published ? (
-                      <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs">Published</span>
-                    ) : (
-                      <span className="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-full text-xs">Draft</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-1">
-                      {item.tags.map((tag, tagIndex) => (
-                        <span key={`${itemId}-${tag}-${tagIndex}`} className="px-2 py-1 text-xs bg-gray-600 rounded-full">{tag}</span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
-                    <button onClick={() => handleEdit(item)} className="font-medium text-blue-500 hover:underline">Edit</button>
-                    <button 
-                      onClick={() => handleDelete(itemId!)}
-                      className="font-medium text-red-500 hover:underline">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              )})
-            ) : (
-              <tr>
-                <td colSpan={4} className="px-6 py-4 text-center">No blog posts found.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingItem ? 'Edit Blog Post' : 'Add New Blog Post'}>
-        <BlogForm 
-          itemToEdit={editingItem}
-          onSave={handleSave}
-          onCancel={handleCloseModal}
-        />
-      </Modal>
-    </div>
-  );
+  const [items, setItems] = useState<BlogPostItem[]>([]); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null); const [query, setQuery] = useState(""); const [status, setStatus] = useState("all"); const [modalOpen, setModalOpen] = useState(false); const [editingItem, setEditingItem] = useState<BlogPostItem | null>(null); const [deletingItem, setDeletingItem] = useState<BlogPostItem | null>(null);
+  const refresh = async () => { const token = localStorage.getItem("authToken"); if (!token) return setError("登入已失效，請重新登入。"); try { setLoading(true); setError(null); setItems(await getBlogPostsAdmin(token)); } catch (cause) { setError(getErrorMessage(cause, "無法載入文章。")); } finally { setLoading(false); } };
+  useEffect(() => { void refresh(); }, []);
+  const filtered = useMemo(() => items.filter(item => (status === "all" || (status === "published") === item.is_published) && `${item.title} ${item.subtitle || ""} ${item.tags.join(" ")}`.toLowerCase().includes(query.toLowerCase())), [items, query, status]);
+  const closeModal = () => { setModalOpen(false); setEditingItem(null); };
+  const save = async (data: Omit<BlogPostItem, "id" | "created_at" | "updated_at">) => { const token = localStorage.getItem("authToken"); if (!token) return setError("登入已失效，請重新登入。"); try { const id = editingItem?.id || editingItem?._id; if (id) await updateBlogPost(id, data, token); else await createBlogPost(data, token); closeModal(); await refresh(); } catch (cause) { setError(getErrorMessage(cause, "無法儲存文章。")); } };
+  const remove = async () => { if (!deletingItem) return; const id = deletingItem.id || deletingItem._id; const token = localStorage.getItem("authToken"); if (!id || !token) return; try { await deleteBlogPost(id, token); setItems(current => current.filter(item => (item.id || item._id) !== id)); } catch (cause) { setError(getErrorMessage(cause, "無法刪除文章。")); } finally { setDeletingItem(null); } };
+  return <><AdminPanel><div className="flex flex-col gap-3 border-b border-zinc-200 p-5 lg:flex-row lg:items-center lg:justify-between"><div className="flex flex-col gap-3 sm:flex-row"><SearchField value={query} onChange={setQuery} placeholder="搜尋文章或標籤" /><select value={status} onChange={event => setStatus(event.target.value)} className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 outline-none focus:border-zinc-400"><option value="all">所有狀態</option><option value="published">已發布</option><option value="draft">草稿</option></select></div><button onClick={() => { setEditingItem(null); setModalOpen(true); }} className={primaryButton}><Plus size={17} />新增文章</button></div>{error && <div className="px-5 pt-5"><AdminAlert>{error}</AdminAlert></div>}{loading ? <EmptyState title="正在載入文章…" description="請稍候。" /> : filtered.length === 0 ? <EmptyState title={query || status !== "all" ? "沒有符合的文章" : "還沒有文章"} description="建立第一篇文章，讓網站開始累積內容。" /> : <div className="overflow-x-auto"><table className="min-w-full"><thead className="border-b border-zinc-200 bg-zinc-50"><tr><th className={tableHeader}>文章</th><th className={tableHeader}>狀態</th><th className={tableHeader}>標籤</th><th className={`${tableHeader} text-right`}>操作</th></tr></thead><tbody className="divide-y divide-zinc-100">{filtered.map(item => <tr key={item.id || item._id} className="hover:bg-zinc-50/70"><td className={tableCell}><p className="font-semibold text-zinc-900">{item.title}</p>{item.subtitle && <p className="mt-1 max-w-xl truncate text-xs text-zinc-500">{item.subtitle}</p>}</td><td className={tableCell}><StatusBadge tone={item.is_published ? "success" : "warning"}>{item.is_published ? "已發布" : "草稿"}</StatusBadge></td><td className={tableCell}><div className="flex max-w-xs flex-wrap gap-1">{item.tags.map(tag => <span key={tag} className="rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600">{tag}</span>)}</div></td><td className={`${tableCell} whitespace-nowrap text-right`}><button onClick={() => { setEditingItem(item); setModalOpen(true); }} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950" aria-label={`編輯 ${item.title}`}><Pencil size={17} /></button><button onClick={() => setDeletingItem(item)} className="ml-1 rounded-lg p-2 text-zinc-500 hover:bg-red-50 hover:text-red-600" aria-label={`刪除 ${item.title}`}><Trash2 size={17} /></button></td></tr>)}</tbody></table></div>}</AdminPanel><Modal isOpen={modalOpen} onClose={closeModal} title={editingItem ? "編輯文章" : "新增文章"}><BlogForm itemToEdit={editingItem} onSave={save} onCancel={closeModal} /></Modal><ConfirmDialog open={Boolean(deletingItem)} title="刪除文章？" description={`「${deletingItem?.title || ""}」將從網站移除，且無法復原。`} onCancel={() => setDeletingItem(null)} onConfirm={() => void remove()} /></>;
 }

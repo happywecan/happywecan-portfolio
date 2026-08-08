@@ -1,159 +1,21 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
-import { getHobbies, createHobby, updateHobby, deleteHobby, Hobby } from '../../services/hobbyService';
-import HobbyForm from './HobbyForm';
-import Modal from '../common/Modal';
-import { getErrorMessage } from '../../services/apiClient';
+import { useEffect, useMemo, useState } from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "react-toastify";
+import { createHobby, deleteHobby, getHobbies, Hobby, updateHobby } from "@/services/hobbyService";
+import HobbyForm from "./HobbyForm";
+import Modal from "@/components/common/Modal";
+import { getErrorMessage } from "@/services/apiClient";
+import { AdminAlert, AdminPanel, ConfirmDialog, EmptyState, primaryButton, SearchField, tableCell, tableHeader } from "@/components/admin/shell/AdminUi";
 
 export default function HobbyManager() {
-  const [hobbies, setHobbies] = useState<Hobby[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [itemToEdit, setItemToEdit] = useState<Hobby | null>(null);
-
-  useEffect(() => {
-    fetchHobbies();
-  }, []);
-
-  const fetchHobbies = async () => {
-    try {
-      setLoading(true);
-      const data = await getHobbies();
-      setHobbies(data);
-    } catch (err: unknown) {
-      const message = getErrorMessage(err, 'Failed to fetch hobbies');
-      setError(message);
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOpenModalForCreate = () => {
-    setItemToEdit(null);
-    setIsModalOpen(true);
-  };
-
-  const handleOpenModalForEdit = (item: Hobby) => {
-    setItemToEdit(item);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setItemToEdit(null);
-  };
-
-  const handleSave = async (hobbyData: Omit<Hobby, 'id' | '_id'>) => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      toast.error("Authentication token not found.");
-      return;
-    }
-
-    try {
-      const id = itemToEdit?.id || itemToEdit?._id;
-      if (id) {
-        await updateHobby(id, hobbyData, token);
-        toast.success("Hobby updated successfully!");
-      } else {
-        await createHobby(hobbyData, token);
-        toast.success("Hobby created successfully!");
-      }
-      fetchHobbies();
-      handleCloseModal();
-    } catch (err: unknown) {
-      const message = getErrorMessage(err, 'Failed to save hobby');
-      setError(message);
-      toast.error(message);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this hobby?")) {
-      return;
-    }
-
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      toast.error("Authentication token not found.");
-      return;
-    }
-
-    try {
-      await deleteHobby(id, token);
-      toast.success("Hobby deleted successfully!");
-      fetchHobbies();
-    } catch (err: unknown) {
-      const message = getErrorMessage(err, 'Failed to delete hobby');
-      setError(message);
-      toast.error(message);
-    }
-  };
-
-  if (loading) return <p>Loading hobbies...</p>;
-
-  return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-white">Manage Hobbies</h2>
-        <button
-          onClick={handleOpenModalForCreate}
-          className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-        >
-          + Add New Hobby
-        </button>
-      </div>
-      
-      {error && <p className="text-red-500 bg-red-100 p-3 rounded mb-4">Error: {error}</p>}
-
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-gray-900 rounded-lg">
-          <thead>
-            <tr className="bg-gray-700">
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Icon</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Description</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-700">
-            {hobbies.length > 0 ? (
-              hobbies.map(item => {
-                const itemId = item.id || item._id;
-                return (
-                  <tr key={itemId}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{item.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{item.icon}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400 truncate max-w-xs">{item.description}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button onClick={() => handleOpenModalForEdit(item)} className="text-indigo-400 hover:text-indigo-600 mr-4">Edit</button>
-                      <button onClick={() => handleDelete(itemId!)} className="text-red-400 hover:text-red-600">Delete</button>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan={4} className="px-6 py-4 text-center text-gray-500">No hobbies found.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {isModalOpen && (
-        <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={itemToEdit ? "Edit Hobby" : "Add New Hobby"}>
-          <HobbyForm
-            itemToEdit={itemToEdit}
-            onSave={handleSave}
-            onCancel={handleCloseModal}
-          />
-        </Modal>
-      )}
-    </div>
-  );
+  const [hobbies, setHobbies] = useState<Hobby[]>([]); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null); const [query, setQuery] = useState(""); const [modalOpen, setModalOpen] = useState(false); const [editingItem, setEditingItem] = useState<Hobby | null>(null); const [deletingItem, setDeletingItem] = useState<Hobby | null>(null);
+  const refresh = async () => { try { setLoading(true); setError(null); setHobbies(await getHobbies()); } catch (cause) { setError(getErrorMessage(cause, "無法載入興趣。")); } finally { setLoading(false); } };
+  useEffect(() => { void refresh(); }, []);
+  const filtered = useMemo(() => hobbies.filter(item => `${item.name} ${item.description || ""}`.toLowerCase().includes(query.toLowerCase())), [hobbies, query]);
+  const closeModal = () => { setModalOpen(false); setEditingItem(null); };
+  const save = async (data: Omit<Hobby, "id" | "_id">) => { const token = localStorage.getItem("authToken"); if (!token) return setError("登入已失效，請重新登入。"); try { const id = editingItem?.id || editingItem?._id; if (id) await updateHobby(id, data, token); else await createHobby(data, token); toast.success("興趣已儲存"); closeModal(); await refresh(); } catch (cause) { setError(getErrorMessage(cause, "無法儲存興趣。")); } };
+  const remove = async () => { if (!deletingItem) return; const id = deletingItem.id || deletingItem._id; const token = localStorage.getItem("authToken"); if (!id || !token) return; try { await deleteHobby(id, token); setHobbies(items => items.filter(item => (item.id || item._id) !== id)); } catch (cause) { setError(getErrorMessage(cause, "無法刪除興趣。")); } finally { setDeletingItem(null); } };
+  return <><AdminPanel><div className="flex flex-col gap-3 border-b border-zinc-200 p-5 sm:flex-row sm:items-center sm:justify-between"><SearchField value={query} onChange={setQuery} placeholder="搜尋興趣" /><button onClick={() => { setEditingItem(null); setModalOpen(true); }} className={primaryButton}><Plus size={17} />新增興趣</button></div>{error && <div className="px-5 pt-5"><AdminAlert>{error}</AdminAlert></div>}{loading ? <EmptyState title="正在載入興趣…" description="請稍候。" /> : filtered.length === 0 ? <EmptyState title={query ? "沒有符合的興趣" : "還沒有興趣"} description="新增一個興趣來豐富自我介紹。" /> : <div className="overflow-x-auto"><table className="min-w-full"><thead className="border-b border-zinc-200 bg-zinc-50"><tr><th className={tableHeader}>興趣</th><th className={tableHeader}>描述</th><th className={`${tableHeader} text-right`}>操作</th></tr></thead><tbody className="divide-y divide-zinc-100">{filtered.map(item => <tr key={item.id || item._id} className="hover:bg-zinc-50"><td className={`${tableCell} font-semibold text-zinc-900`}>{item.name}</td><td className={tableCell}>{item.description || "—"}</td><td className={`${tableCell} whitespace-nowrap text-right`}><button onClick={() => { setEditingItem(item); setModalOpen(true); }} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950"><Pencil size={17} /></button><button onClick={() => setDeletingItem(item)} className="ml-1 rounded-lg p-2 text-zinc-500 hover:bg-red-50 hover:text-red-600"><Trash2 size={17} /></button></td></tr>)}</tbody></table></div>}</AdminPanel><Modal isOpen={modalOpen} onClose={closeModal} title={editingItem ? "編輯興趣" : "新增興趣"}><HobbyForm itemToEdit={editingItem} onSave={save} onCancel={closeModal} /></Modal><ConfirmDialog open={Boolean(deletingItem)} title="刪除興趣？" description={`「${deletingItem?.name || ""}」將從前台移除。`} onCancel={() => setDeletingItem(null)} onConfirm={() => void remove()} /></>;
 }

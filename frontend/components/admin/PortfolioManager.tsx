@@ -1,187 +1,34 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { getPortfolioItems, deletePortfolioItem, createPortfolioItem, updatePortfolioItem, PortfolioPayload } from '@/services/portfolioService';
-import Modal from '@/components/common/Modal';
-import PortfolioForm from '@/components/admin/PortfolioForm';
-import { getErrorMessage } from '@/services/apiClient';
+import { useEffect, useMemo, useState } from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import Modal from "@/components/common/Modal";
+import PortfolioForm from "@/components/admin/PortfolioForm";
+import { createPortfolioItem, deletePortfolioItem, getPortfolioItems, PortfolioPayload, updatePortfolioItem } from "@/services/portfolioService";
+import { getErrorMessage } from "@/services/apiClient";
+import { AdminAlert, AdminPanel, ConfirmDialog, EmptyState, primaryButton, SearchField, tableCell, tableHeader } from "@/components/admin/shell/AdminUi";
 
-// Define the type for a portfolio item based on the backend model
-interface PortfolioItem {
-  id?: string;
-  _id?: string;
-  title: string;
-  description: string;
-  content?: string;
-  image_url?: string;
-  github_url?: string;
-  demo_url?: string;
-  tags: string[];
-  created_at: string;
-}
+interface PortfolioItem { id?: string; _id?: string; title: string; description: string; content?: string; image_url?: string; github_url?: string; demo_url?: string; tags: string[]; created_at: string; }
 
 export default function PortfolioManager() {
   const [items, setItems] = useState<PortfolioItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // State for the modal and form
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<PortfolioItem | null>(null);
+  const [deletingItem, setDeletingItem] = useState<PortfolioItem | null>(null);
 
-  const fetchItems = async () => {
-    try {
-      setLoading(true);
-      const portfolioItems = await getPortfolioItems();
-      setItems(portfolioItems);
-    } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Failed to fetch portfolio items.'));
-    } finally {
-      setLoading(false);
-    }
+  const refresh = async () => { try { setLoading(true); setError(null); setItems(await getPortfolioItems()); } catch (cause) { setError(getErrorMessage(cause, "無法載入作品集。")); } finally { setLoading(false); } };
+  useEffect(() => { void refresh(); }, []);
+  const filtered = useMemo(() => items.filter(item => `${item.title} ${item.description} ${item.tags.join(" ")}`.toLowerCase().includes(query.toLowerCase())), [items, query]);
+  const closeModal = () => { setModalOpen(false); setEditingItem(null); };
+  const save = async (data: Omit<PortfolioItem, "id" | "created_at">) => {
+    const token = localStorage.getItem("authToken"); if (!token) return setError("登入已失效，請重新登入。");
+    const payload: PortfolioPayload = { title: data.title, description: data.description, image_url: data.image_url || "", content: data.content || "", github_url: data.github_url, demo_url: data.demo_url, tags: data.tags };
+    try { const id = editingItem?.id || editingItem?._id; if (id) await updatePortfolioItem(id, payload, token); else await createPortfolioItem(payload, token); closeModal(); await refresh(); } catch (cause) { setError(getErrorMessage(cause, "無法儲存作品。")); }
   };
+  const remove = async () => { if (!deletingItem) return; const id = deletingItem.id || deletingItem._id; const token = localStorage.getItem("authToken"); if (!id || !token) return; try { await deletePortfolioItem(id, token); setItems(current => current.filter(item => (item.id || item._id) !== id)); } catch (cause) { setError(getErrorMessage(cause, "無法刪除作品。")); } finally { setDeletingItem(null); } };
 
-  useEffect(() => {
-    fetchItems();
-  }, []);
-
-  const handleAddNew = () => {
-    setEditingItem(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEdit = (item: PortfolioItem) => {
-    setEditingItem(item);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingItem(null);
-  };
-
-  const handleSave = async (cleanItemData: Omit<PortfolioItem, 'id' | 'created_at'>) => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      setError('You are not authenticated. Please log in again.');
-      return;
-    }
-
-    try {
-      const payload: PortfolioPayload = {
-        title: cleanItemData.title,
-        description: cleanItemData.description,
-        image_url: cleanItemData.image_url || '',
-        content: cleanItemData.content || '',
-        tags: cleanItemData.tags,
-      };
-
-      // The 'cleanItemData' from the form no longer contains an 'id'.
-      // We decide whether to update or create based on the 'editingItem' state.
-      const id = editingItem?.id || editingItem?._id;
-      if (editingItem && id) {
-        // Update existing item, using whichever id property exists
-        await updatePortfolioItem(id, payload, token);
-      } else {
-        // Create new item
-        await createPortfolioItem(payload, token);
-      }
-      handleCloseModal();
-      await fetchItems(); // Refresh data
-    } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Failed to save item.'));
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this item?')) {
-      return;
-    }
-
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      setError('You are not authenticated. Please log in again.');
-      return;
-    }
-
-    try {
-      await deletePortfolioItem(id, token);
-      setItems(items.filter(item => (item.id || item._id) !== id));
-    } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Failed to delete item.'));
-    }
-  };
-
-  if (loading && items.length === 0) {
-    return <div className="text-center text-gray-400">Loading portfolio items...</div>;
-  }
-
-  return (
-    <div className="mt-8 bg-gray-800/50 p-6 rounded-lg">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-2xl font-bold text-white">Manage Portfolio</h3>
-        <button 
-          onClick={handleAddNew}
-          className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
-          + Add New Item
-        </button>
-      </div>
-
-      {error && <div className="my-4 text-center text-red-400 bg-red-900/20 p-3 rounded-md">Error: {error}</div>}
-      
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm text-left text-gray-300">
-          <thead className="text-xs text-gray-400 uppercase bg-gray-700/50">
-            <tr>
-              <th scope="col" className="px-6 py-3">Title</th>
-              <th scope="col" className="px-6 py-3">Description</th>
-              <th scope="col" className="px-6 py-3">Tags</th>
-              <th scope="col" className="px-6 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.length > 0 ? (
-              items.map((item, index) => {
-                const itemId = item.id || item._id;
-                return (
-                <tr key={itemId || index} className="bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50">
-                  <th scope="row" className="px-6 py-4 font-medium text-white whitespace-nowrap">
-                    {item.title}
-                  </th>
-                  <td className="px-6 py-4 max-w-sm truncate">{item.description}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-1">
-                      {item.tags.map((tag, tagIndex) => (
-                        <span key={`${itemId}-${tag}-${tagIndex}`} className="px-2 py-1 text-xs bg-gray-600 rounded-full">{tag}</span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
-                    <button onClick={() => handleEdit(item)} className="font-medium text-blue-500 hover:underline">Edit</button>
-                    <button 
-                      onClick={() => handleDelete(itemId!)}
-                      className="font-medium text-red-500 hover:underline">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              )})
-            ) : (
-              <tr>
-                <td colSpan={4} className="px-6 py-4 text-center">No portfolio items found.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingItem ? 'Edit Portfolio Item' : 'Add New Portfolio Item'}>
-        <PortfolioForm 
-          itemToEdit={editingItem}
-          onSave={handleSave}
-          onCancel={handleCloseModal}
-        />
-      </Modal>
-    </div>
-  );
+  return <><AdminPanel><div className="flex flex-col gap-4 border-b border-zinc-200 p-5 sm:flex-row sm:items-center sm:justify-between"><SearchField value={query} onChange={setQuery} placeholder="搜尋作品、描述或標籤" /><button onClick={() => { setEditingItem(null); setModalOpen(true); }} className={primaryButton}><Plus size={17} />新增作品</button></div>{error && <div className="px-5 pt-5"><AdminAlert>{error}</AdminAlert></div>}{loading ? <EmptyState title="正在載入作品集…" description="請稍候。" /> : filtered.length === 0 ? <EmptyState title={query ? "沒有符合的作品" : "還沒有作品"} description={query ? "試試其他關鍵字。" : "建立第一個要展示的專案。"} /> : <div className="overflow-x-auto"><table className="min-w-full"><thead className="border-b border-zinc-200 bg-zinc-50"><tr><th className={tableHeader}>作品</th><th className={tableHeader}>標籤</th><th className={`${tableHeader} text-right`}>操作</th></tr></thead><tbody className="divide-y divide-zinc-100">{filtered.map(item => <tr key={item.id || item._id} className="hover:bg-zinc-50/70"><td className={tableCell}><p className="font-semibold text-zinc-900">{item.title}</p><p className="mt-1 max-w-xl truncate text-xs text-zinc-500">{item.description}</p></td><td className={tableCell}><div className="flex max-w-xs flex-wrap gap-1">{item.tags.map(tag => <span key={tag} className="rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600">{tag}</span>)}</div></td><td className={`${tableCell} text-right whitespace-nowrap`}><button onClick={() => { setEditingItem(item); setModalOpen(true); }} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950" aria-label={`編輯 ${item.title}`}><Pencil size={17} /></button><button onClick={() => setDeletingItem(item)} className="ml-1 rounded-lg p-2 text-zinc-500 hover:bg-red-50 hover:text-red-600" aria-label={`刪除 ${item.title}`}><Trash2 size={17} /></button></td></tr>)}</tbody></table></div>}</AdminPanel><Modal isOpen={modalOpen} onClose={closeModal} title={editingItem ? "編輯作品" : "新增作品"}><PortfolioForm itemToEdit={editingItem} onSave={save} onCancel={closeModal} /></Modal><ConfirmDialog open={Boolean(deletingItem)} title="刪除作品？" description={`「${deletingItem?.title || ""}」將從網站移除，且無法復原。`} onCancel={() => setDeletingItem(null)} onConfirm={() => void remove()} /></>;
 }

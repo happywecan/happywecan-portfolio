@@ -1,139 +1,17 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { ContactItem, deleteContact, getContactsAdmin, updateContactStatus } from '@/services/contactService';
+import { useEffect, useMemo, useState } from "react";
+import { Check, Mail, RefreshCw, Reply, Trash2 } from "lucide-react";
+import { ContactItem, deleteContact, getContactsAdmin, updateContactStatus } from "@/services/contactService";
+import { getErrorMessage } from "@/services/apiClient";
+import { AdminAlert, AdminPanel, ConfirmDialog, EmptyState, primaryButton, SearchField, StatusBadge } from "@/components/admin/shell/AdminUi";
 
 export default function ContactManager() {
-  const [contacts, setContacts] = useState<ContactItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchContacts = async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      setError('You are not authenticated. Please log in again.');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getContactsAdmin(token);
-      setContacts(data);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch contacts';
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchContacts();
-  }, []);
-
-  const handleToggleStatus = async (id: string, updates: { read?: boolean; replied?: boolean }) => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      setError('You are not authenticated. Please log in again.');
-      return;
-    }
-
-    try {
-      const updated = await updateContactStatus(id, updates, token);
-      setContacts((prev) => prev.map((item) => (item.id === id ? updated : item)));
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to update contact status';
-      setError(message);
-    }
-  };
-
-  const handleDelete = async (item: ContactItem) => {
-    const token = localStorage.getItem('authToken');
-    if (!token || !window.confirm(`Delete message from ${item.email}?`)) return;
-    try {
-      await deleteContact(item.id, token);
-      setContacts(previous => previous.filter(contact => contact.id !== item.id));
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to delete contact');
-    }
-  };
-
-  if (loading && contacts.length === 0) {
-    return <div className="text-center text-gray-400">Loading contacts...</div>;
-  }
-
-  return (
-    <div className="mt-8 rounded-lg bg-gray-800/50 p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-2xl font-bold text-white">Manage Contacts</h3>
-        <button
-          onClick={fetchContacts}
-          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
-        >
-          Refresh
-        </button>
-      </div>
-
-      {error && <div className="my-4 rounded-md bg-red-900/20 p-3 text-center text-red-400">Error: {error}</div>}
-
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-left text-sm text-gray-300">
-          <thead className="bg-gray-700/50 text-xs uppercase text-gray-400">
-            <tr>
-              <th className="px-6 py-3">Time</th>
-              <th className="px-6 py-3">Name</th>
-              <th className="px-6 py-3">Email</th>
-              <th className="px-6 py-3">Message</th>
-              <th className="px-6 py-3">Read</th>
-              <th className="px-6 py-3">Replied</th>
-              <th className="px-6 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {contacts.length > 0 ? (
-              contacts.map((item) => (
-                <tr key={item.id} className="border-b border-gray-700 bg-gray-800 hover:bg-gray-700/50">
-                  <td className="whitespace-nowrap px-6 py-4">
-                    {new Date(item.created_at).toLocaleString('zh-TW', { hour12: false })}
-                  </td>
-                  <td className="px-6 py-4 font-medium text-white">{item.name}</td>
-                  <td className="px-6 py-4">{item.email}</td>
-                  <td className="max-w-lg px-6 py-4 whitespace-pre-wrap break-words">{item.message}</td>
-                  <td className="px-6 py-4">
-                    <input
-                      type="checkbox"
-                      checked={item.read}
-                      onChange={(event) => handleToggleStatus(item.id, { read: event.target.checked })}
-                      className="h-5 w-5"
-                    />
-                  </td>
-                  <td className="px-6 py-4">
-                    <input
-                      type="checkbox"
-                      checked={item.replied}
-                      onChange={(event) => handleToggleStatus(item.id, { replied: event.target.checked })}
-                      className="h-5 w-5"
-                    />
-                  </td>
-                  <td className="px-6 py-4">
-                    <button className="text-red-400 hover:text-red-300" onClick={() => void handleDelete(item)}>
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={7} className="px-6 py-4 text-center text-gray-400">
-                  No contact messages found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+  const [contacts, setContacts] = useState<ContactItem[]>([]); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null); const [query, setQuery] = useState(""); const [filter, setFilter] = useState("unread"); const [deletingItem, setDeletingItem] = useState<ContactItem | null>(null);
+  const refresh = async () => { const token = localStorage.getItem("authToken"); if (!token) return setError("登入已失效，請重新登入。"); try { setLoading(true); setError(null); setContacts(await getContactsAdmin(token)); } catch (cause) { setError(getErrorMessage(cause, "無法載入聯絡訊息。")); } finally { setLoading(false); } };
+  useEffect(() => { void refresh(); }, []);
+  const filtered = useMemo(() => contacts.filter(item => (filter === "all" || (filter === "unread" && !item.read) || (filter === "replied" && item.replied)) && `${item.name} ${item.email} ${item.message}`.toLowerCase().includes(query.toLowerCase())), [contacts, filter, query]);
+  const updateStatus = async (item: ContactItem, updates: { read?: boolean; replied?: boolean }) => { const token = localStorage.getItem("authToken"); if (!token) return; try { const updated = await updateContactStatus(item.id, updates, token); setContacts(current => current.map(contact => contact.id === item.id ? updated : contact)); } catch (cause) { setError(getErrorMessage(cause, "無法更新訊息狀態。")); } };
+  const remove = async () => { if (!deletingItem) return; const token = localStorage.getItem("authToken"); if (!token) return; try { await deleteContact(deletingItem.id, token); setContacts(current => current.filter(contact => contact.id !== deletingItem.id)); } catch (cause) { setError(getErrorMessage(cause, "無法刪除訊息。")); } finally { setDeletingItem(null); } };
+  return <><AdminPanel><div className="flex flex-col gap-3 border-b border-zinc-200 p-5 lg:flex-row lg:items-center lg:justify-between"><div className="flex flex-col gap-3 sm:flex-row"><SearchField value={query} onChange={setQuery} placeholder="搜尋寄件人、信箱或內容" /><select value={filter} onChange={event => setFilter(event.target.value)} className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 outline-none focus:border-zinc-400"><option value="unread">未讀</option><option value="replied">已回覆</option><option value="all">所有訊息</option></select></div><button onClick={() => void refresh()} className={primaryButton}><RefreshCw size={16} />重新整理</button></div>{error && <div className="px-5 pt-5"><AdminAlert>{error}</AdminAlert></div>}{loading ? <EmptyState title="正在載入收件匣…" description="請稍候。" /> : filtered.length === 0 ? <EmptyState title={query ? "沒有符合的訊息" : "收件匣目前沒有訊息"} description={query ? "試試其他關鍵字。" : "新的聯絡表單會顯示在這裡。"} /> : <div className="divide-y divide-zinc-100">{filtered.map(item => <article key={item.id} className={`p-5 transition hover:bg-zinc-50 ${!item.read ? "bg-indigo-50/30" : ""}`}><div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h2 className="font-semibold normal-case tracking-tight text-zinc-950">{item.name}</h2>{!item.read && <StatusBadge tone="warning">未讀</StatusBadge>}{item.replied && <StatusBadge tone="success">已回覆</StatusBadge>}</div><a href={`mailto:${item.email}`} className="mt-1 inline-flex items-center gap-1 text-sm text-[#455ce9] hover:underline"><Mail size={14} />{item.email}</a><p className="mt-3 max-w-3xl whitespace-pre-wrap text-sm leading-6 text-zinc-600">{item.message}</p><p className="mt-3 text-xs text-zinc-400">{new Date(item.created_at).toLocaleString("zh-TW", { hour12: false })}</p></div><div className="flex shrink-0 items-center gap-1"><button onClick={() => void updateStatus(item, { read: !item.read })} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950" aria-label={item.read ? "標記未讀" : "標記已讀"}>{item.read ? <Mail size={17} /> : <Check size={17} />}</button><button onClick={() => void updateStatus(item, { read: true, replied: !item.replied })} className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-950" aria-label={item.replied ? "取消已回覆" : "標記已回覆"}><Reply size={17} /></button><button onClick={() => setDeletingItem(item)} className="rounded-lg p-2 text-zinc-500 hover:bg-red-50 hover:text-red-600" aria-label={`刪除 ${item.name} 的訊息`}><Trash2 size={17} /></button></div></div></article>)}</div>}</AdminPanel><ConfirmDialog open={Boolean(deletingItem)} title="刪除訊息？" description={`來自 ${deletingItem?.email || ""} 的訊息將永久移除。`} onCancel={() => setDeletingItem(null)} onConfirm={() => void remove()} /></>;
 }

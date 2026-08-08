@@ -342,8 +342,15 @@ const SiteSettingsForm: React.FC = () => {
     <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
       <h2 className="text-2xl font-bold text-white mb-6">Site General Settings</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
+        <nav aria-label="設定分類" className="sticky top-20 z-10 -mx-2 flex gap-2 overflow-x-auto border-y border-gray-700 bg-gray-800/95 px-2 py-3 text-xs text-gray-300 backdrop-blur">
+          <a href="#contact-details" className="whitespace-nowrap rounded-full bg-gray-700 px-3 py-1.5 hover:bg-gray-600">聯絡方式</a>
+          <a href="#navigation-copy" className="whitespace-nowrap rounded-full bg-gray-700 px-3 py-1.5 hover:bg-gray-600">導覽與首頁</a>
+          <a href="#about-positioning" className="whitespace-nowrap rounded-full bg-gray-700 px-3 py-1.5 hover:bg-gray-600">關於我</a>
+          <a href="#section-copy" className="whitespace-nowrap rounded-full bg-gray-700 px-3 py-1.5 hover:bg-gray-600">區塊文案</a>
+          <a href="#contact-copy" className="whitespace-nowrap rounded-full bg-gray-700 px-3 py-1.5 hover:bg-gray-600">聯絡頁文案</a>
+        </nav>
         
-        <h3 className="text-xl font-bold text-white mt-4">Contact Details</h3>
+        <h3 id="contact-details" className="scroll-mt-28 text-xl font-bold text-white mt-4">Contact Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label htmlFor="contact_email" className="block text-gray-300 text-sm font-bold mb-2">Email:</label>
@@ -463,7 +470,7 @@ const SiteSettingsForm: React.FC = () => {
           </div>
         </div>
 
-        <h3 className="text-xl font-bold text-white mt-4 border-t border-gray-600 pt-4">Navigation Copy</h3>
+        <h3 id="navigation-copy" className="scroll-mt-28 text-xl font-bold text-white mt-4 border-t border-gray-600 pt-4">Navigation Copy</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {navFields.map(renderSettingField)}
           <div className="md:col-span-2">
@@ -536,7 +543,7 @@ const SiteSettingsForm: React.FC = () => {
           ))}
         </div>
 
-        <h3 className="text-xl font-bold text-white mt-4 border-t border-gray-600 pt-4">About / Positioning</h3>
+        <h3 id="about-positioning" className="scroll-mt-28 text-xl font-bold text-white mt-4 border-t border-gray-600 pt-4">About / Positioning</h3>
         <ImageUploadField
           label="About Photo:"
           name="about_image_url"
@@ -659,7 +666,7 @@ const SiteSettingsForm: React.FC = () => {
           ))}
         </div>
 
-        <h3 className="text-xl font-bold text-white mt-4 border-t border-gray-600 pt-4">Skills Section Copy</h3>
+        <h3 id="section-copy" className="scroll-mt-28 text-xl font-bold text-white mt-4 border-t border-gray-600 pt-4">Skills Section Copy</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {skillsFields.map(renderSettingField)}
         </div>
@@ -679,7 +686,7 @@ const SiteSettingsForm: React.FC = () => {
           {detailCopyFields.map(renderSettingField)}
         </div>
 
-        <h3 className="text-xl font-bold text-white mt-4 border-t border-gray-600 pt-4">Contact Section Copy</h3>
+        <h3 id="contact-copy" className="scroll-mt-28 text-xl font-bold text-white mt-4 border-t border-gray-600 pt-4">Contact Section Copy</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {contactCopyFields.map(renderSettingField)}
         </div>
