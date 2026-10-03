@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link as ScrollLink } from "react-scroll";
 import Image from "next/image";
@@ -17,7 +17,7 @@ const defaultNavItems = [
 
 export default function TopNavigation() {
   const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollY = useRef(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
@@ -39,12 +39,12 @@ export default function TopNavigation() {
   useEffect(() => {
     const controlNavbar = () => {
       if (typeof window !== "undefined") {
-        if (window.scrollY > lastScrollY && window.scrollY > 100) {
+        if (window.scrollY > lastScrollY.current && window.scrollY > 100) {
           setIsVisible(false);
         } else {
           setIsVisible(true);
         }
-        setLastScrollY(window.scrollY);
+        lastScrollY.current = window.scrollY;
       }
     };
 
@@ -52,7 +52,7 @@ export default function TopNavigation() {
     return () => {
       window.removeEventListener("scroll", controlNavbar);
     };
-  }, [lastScrollY]);
+  }, []);
 
   useEffect(() => {
     const fetchSettings = async () => {

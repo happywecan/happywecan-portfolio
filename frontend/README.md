@@ -1,36 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portfolio frontend
 
-## Getting Started
+The public site is a Next.js 16 and React 19 application. It is intentionally
+organised by responsibility rather than by an AI-generated single-page pattern.
 
-First, run the development server:
+## Start locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The default API URL is `http://localhost:8001`. Set `NEXT_PUBLIC_API_URL` when
+the Java API is hosted elsewhere.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Verify a change
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npx tsc --noEmit
+npm run build
+```
 
-## Learn More
+Do not run `next build` while another `next dev` process owns `.next/lock`; use a
+separate worktree or stop that local development server first.
 
-To learn more about Next.js, take a look at the following resources:
+## Where to begin reading
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `app/page.tsx` — route-level browser behaviour only.
+- `components/sections/EditorialLanding.tsx` — public homepage composition root.
+- `features/landing/` — homepage content, loading hook, and visual sections.
+- `services/apiClient.ts` — shared HTTP and error boundary.
+- `services/*.ts` — endpoint-specific request functions.
+- `types/api.ts` — API response contracts shared by UI and services.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Read the repository-wide [frontend learning guide](../docs/frontend-learning-guide.md)
+before making a larger refactor. It explains the boundaries and gives focused
+exercises rather than treating this project as a polished template to copy blindly.

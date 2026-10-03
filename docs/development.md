@@ -55,6 +55,45 @@ homelab-mongodb-test
 
 ## Start The App On Any Development Machine
 
+### Lightweight host-native mode (recommended on lower-spec computers)
+
+This runs Next.js and Spring Boot directly on your computer. Docker is not
+required; MongoDB can remain on the Mac mini or Atlas via `MONGODB_URI`.
+
+Requirements:
+
+- Node.js 22
+- Java 21 JDK
+- `npm install` completed once in `frontend/`
+- a local `.env` copied from `.env.example`
+
+Run both services in one terminal:
+
+```bash
+sh scripts/dev-local.sh
+```
+
+The script starts the backend first and waits for its MongoDB-backed readiness
+endpoint before it starts Next.js. Press `Ctrl+C` once to stop both processes.
+
+Or use two terminals when you want to read each service's logs separately:
+
+```bash
+sh scripts/dev-backend-local.sh
+sh scripts/dev-frontend-local.sh
+```
+
+The frontend is `http://localhost:3000`; the API and readiness endpoint are
+`http://localhost:8001` and `http://localhost:8001/actuator/health/readiness`.
+
+The scripts require Java 21 explicitly. This matters because the project's
+Mockito tests are not compatible with the Java 26 runtime currently installed on
+this machine. On Apple Silicon Macs, the scripts automatically prefer Homebrew's
+`/opt/homebrew/opt/openjdk@21` when it is installed; they do not change the
+system-wide Java default.
+
+### Docker mode
+
 Use the same Docker Compose flow on Windows and MacBook.
 
 Windows PowerShell:
@@ -100,8 +139,8 @@ docker compose down
 1. Clone or pull the repo.
 2. Copy `.env.example` to `.env`.
 3. Fill in local secrets, especially `MONGODB_URI`.
-4. Install Docker Desktop.
-5. Start with Docker Compose.
+4. Install Node.js 22 and a Java 21 JDK, or install Docker Desktop.
+5. Start with the lightweight scripts above, or Docker Compose.
 
 Windows:
 

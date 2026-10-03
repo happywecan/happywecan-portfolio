@@ -92,7 +92,7 @@ Cloud Run 的容器檔案系統不是永久儲存；正式採用 Cloud Run 時�
 - 登入、聯絡表單與 Newsletter 訂閱依來源 IP 限流。
 - 圖片同時驗證副檔名、MIME、檔案大小及內容簽章。
 
-## 遷移策略
+## 執行路徑
 
-主要 `docker-compose.yml` 已改用 Java。Python 仍保留為 `legacy-python` profile，
-方便比對舊資料契約；確認正式環境一段時間後再移除 Python 原始碼與 dependencies。
+`docker-compose.yml` 只啟動 Spring Boot API 與 Next.js 前端。Java 後端是唯一受支援的
+API 實作；不保留舊後端相容 profile。

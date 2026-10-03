@@ -1,27 +1,23 @@
-# HappyWeCan Portfolio
+# Angelo Portfolio
 
-Personal portfolio and content management system built with Next.js, FastAPI,
-MongoDB, and Docker. The site is used as a public career portfolio while the
-admin area supports editing portfolio projects, blog posts, skills, hobbies,
-homepage copy, uploaded images, and contact messages.
+A personal portfolio and lightweight content-management system built to present
+production-minded AI, manufacturing DX, and full-stack engineering work.
 
-## Tech Stack
+## Stack
 
-- Frontend: Next.js, React, TypeScript, Tailwind CSS, Framer Motion, GSAP
-- Backend: FastAPI, Python, MongoDB, JWT authentication
-- Infrastructure: Docker Compose for local development, GitHub Actions and VM
-  deployment files for production-oriented deployment
+- Frontend: Next.js, React, TypeScript, Tailwind CSS
+- Backend: Java 21, Spring Boot, MongoDB, JWT authentication
+- Delivery: Docker Compose, GitHub Actions, VM deployment workflow
 
-## Main Features
+## Features
 
-- Responsive portfolio homepage with configurable sections
-- Admin panel for portfolio, blog, skill, hobby, hero, and site settings
-- Image upload and static asset serving through the FastAPI backend
-- Contact form and mail integration settings
-- Docker-based local development flow for frontend and backend
-- Shared test database workflow documented for multi-machine development
+- Responsive portfolio and case-study landing page
+- Admin management for portfolio items, posts, skills, hobbies, and site copy
+- JWT-protected admin APIs, request IDs, rate limiting, health endpoints
+- Image upload and static asset serving
+- Contact inbox and newsletter subscriptions
 
-## Local Development
+## Local development
 
 Copy the environment template and fill in local secrets:
 
@@ -29,7 +25,7 @@ Copy the environment template and fill in local secrets:
 cp .env.example .env
 ```
 
-Start the app:
+Start the Java API, frontend, and their shared Docker volumes:
 
 ```bash
 docker compose up -d --build
@@ -38,51 +34,43 @@ docker compose up -d --build
 Local URLs:
 
 - Frontend: http://localhost:3000
-- Backend API: http://localhost:8001
-- Health check: http://localhost:8001/healthz
+- API: http://localhost:8001
+- API health: http://localhost:8001/actuator/health
 
-View logs:
-
-```bash
-docker compose logs -f
-```
-
-Stop services:
+Run the application checks directly when dependencies are installed:
 
 ```bash
-docker compose down
+(cd frontend && npm run lint && npm run build)
+(cd backend-java && ./mvnw test)
 ```
 
-## Environment Notes
+For a lower-resource local workflow without Docker, use:
 
-The app expects `MONGODB_URI` in `.env`. For development, this can point to a
-local MongoDB, MongoDB Atlas, or the shared Mac mini test database described in
-[docs/development.md](docs/development.md).
+```bash
+sh scripts/dev-local.sh
+```
 
-Do not commit real `.env` files, passwords, API keys, service-account keys, or
-database dumps.
+See [Development guide](docs/development.md) for Java 21 and environment setup.
 
-## Project Structure
+## Repository layout
 
 ```text
-frontend/     Next.js application
-app.py        FastAPI app entry point
-routes/       API routers
-services/     database, auth, mail, and content services
-models/       Pydantic models
-static/       uploaded and served assets
-docs/         development, deployment, and archived notes
-scripts/      maintenance and deployment helper scripts
+frontend/       Next.js application
+backend-java/   Spring Boot API
+static/         public images and locally mounted uploads
+docs/           architecture and deployment notes
+scripts/        deployment and operational helpers
+gcp/            Cloud Build configurations
 ```
 
 ## Documentation
 
 - [Architecture](docs/architecture.md)
+- [Java backend architecture](docs/java-backend-architecture.md)
+- [Frontend learning guide](docs/frontend-learning-guide.md)
+- [Docker runtime guide](docs/docker-runtime.md)
 - [Development guide](docs/development.md)
-- [Mac mini MongoDB test server](docs/mongodb-test-server.md)
 - [VM deployment](docs/gcp-vm-deployment.md)
 
-## Current Status
-
-This repository is being cleaned up for public portfolio use. The active
-application path is the Dockerized Next.js + FastAPI stack.
+Never commit real `.env` files, passwords, API keys, service-account keys, or
+database dumps.

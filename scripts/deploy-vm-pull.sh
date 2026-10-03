@@ -7,7 +7,13 @@ export IMAGE_TAG="${IMAGE_TAG:-main}"
 
 TOKEN="$(curl -fs -H 'Metadata-Flavor: Google' \
   'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token' \
-  | python3 -c 'import json,sys; print(json.load(sys.stdin)["access_token"])')"
+  | tr -d '\n' \
+  | sed -n 's/.*"access_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+
+if [ -z "$TOKEN" ]; then
+  echo "Failed to retrieve the VM service-account access token." >&2
+  exit 1
+fi
 
 echo "$TOKEN" | sudo docker login -u oauth2accesstoken --password-stdin https://asia-east1-docker.pkg.dev
 
