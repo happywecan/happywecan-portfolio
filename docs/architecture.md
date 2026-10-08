@@ -1,84 +1,77 @@
-# Architecture
+# 系統架構
 
-## Overview
+## 整體概覽
 
-The project is split into a frontend web app and a backend API.
-
-```text
-Browser
-  -> Next.js frontend on port 3000
-  -> Spring Boot backend on port 8001
-  -> MongoDB from MONGODB_URI
-```
-
-## Frontend
-
-The `frontend/` app renders the public portfolio, project pages, blog pages,
-login page, and admin interface.
-
-Important paths:
-
-- `frontend/app/`: Next.js app routes
-- `frontend/components/sections/`: route-level public section composition
-- `frontend/features/`: feature-owned page content, hooks, and visual sections
-- `frontend/components/admin/`: admin CRUD screens
-- `frontend/services/apiClient.ts`: shared HTTP/error boundary
-- `frontend/services/`: endpoint-specific browser-side API clients
-
-The browser API base URL is controlled by `NEXT_PUBLIC_API_URL`.
-
-The homepage follows a deliberately small feature structure:
+本專案由前端網站與後端 API 組成：
 
 ```text
-app/page.tsx                         route behaviour
-components/sections/EditorialLanding composition root
-features/landing/useLandingSettings  editable public-content request
-features/landing/landingContent      static portfolio copy
-features/landing/*.tsx               visual sections
+瀏覽器
+  -> Next.js 前端（連接埠 3000）
+  -> Spring Boot 後端（連接埠 8001）
+  -> MongoDB（由 MONGODB_URI 指定）
 ```
 
-This keeps one rendering path for the visible homepage. The old unused
-section-order renderer was removed rather than retained as misleading
-"compatibility" code.
+## 前端
 
-## Backend
+`frontend/` 是 Next.js 應用程式，負責呈現公開的個人作品集、作品頁、部落格、登入頁面與管理介面。
 
-The `backend-java/` service is a Java 21 Spring Boot application. It connects
-to MongoDB, serves uploaded files, exposes health endpoints, and applies JWT
-authentication and request-level protections to the API.
+重要目錄與檔案：
 
-Important paths:
+- `frontend/app/`：Next.js 頁面路由
+- `frontend/components/sections/`：公開頁面主要區塊的組合
+- `frontend/features/`：各功能所屬的頁面內容、Hooks 與視覺區塊
+- `frontend/components/admin/`：管理介面的新增、讀取、修改與刪除（CRUD）畫面
+- `frontend/services/apiClient.ts`：共用的 HTTP 請求與錯誤處理邊界
+- `frontend/services/`：各 API 端點專用的前端呼叫程式
 
-- `backend-java/src/main/java/`: API modules, services, repositories, and security
-- `backend-java/src/test/java/`: controller, service, and security tests
-- `static/uploads/`: uploaded image files mounted into the Java service
+瀏覽器使用的 API 網址由 `NEXT_PUBLIC_API_URL` 設定。
 
-## Data
+首頁採用精簡的功能分層：
 
-MongoDB is configured through `MONGODB_URI`. Development can use the shared test
-database described in `docs/development.md`; production must use a separate
-database.
+```text
+app/page.tsx                         路由與頁面行為
+components/sections/EditorialLanding 首頁組合入口
+features/landing/useLandingSettings  取得可編輯的公開內容
+features/landing/landingContent      靜態作品集文案
+features/landing/*.tsx               首頁視覺區塊
+```
 
-Core content collections include portfolio items, blog posts, skills, hobbies,
-hero settings, site settings, contacts, and users.
+這樣可以讓首頁使用單一的渲染路徑。舊版未使用的區塊排序渲染器已移除，避免保留容易造成誤解的相容程式碼。
 
-## Local Runtime
+## 後端
 
-Docker Compose is the preferred development path:
+`backend-java/` 是使用 Java 21 建立的 Spring Boot 應用程式。它連接 MongoDB、提供上傳檔案、開放健康檢查端點，並對 API 套用 JWT 驗證與請求層級的防護措施。
+
+重要目錄：
+
+- `backend-java/src/main/java/`：API 模組、服務、資料存取與安全設定
+- `backend-java/src/test/java/`：Controller、Service 與安全性測試
+- `static/uploads/`：提供給 Java 服務使用的上傳圖片目錄
+
+## 資料
+
+MongoDB 連線由 `MONGODB_URI` 設定。本機開發可以使用 `docs/development.md` 說明的共用測試資料庫；正式環境必須使用獨立的資料庫。
+
+主要資料集合包括作品、部落格文章、技能、興趣、首頁設定、網站設定、聯絡訊息與使用者。
+
+## 本機執行環境
+
+Docker Compose 是其中一種本機開發方式：
 
 ```bash
 docker compose up -d --build
 ```
 
-This starts:
+此指令會啟動：
 
-- `backend`: Spring Boot container, exposed as `localhost:8001`
-- `frontend`: Next.js container, exposed as `localhost:3000`
+- `backend`：Spring Boot 容器，從本機的 `localhost:8001` 存取
+- `frontend`：Next.js 容器，從本機的 `localhost:3000` 存取
 
-## Deployment
+若電腦效能有限，也可以使用 `docs/development.md` 說明的本機直接啟動方式，不必用 Docker 執行前後端。
 
-The repository contains VM-oriented deployment files. Current deployment notes
-are in:
+## 部署
+
+專案包含以 VM（虛擬機器）為主的部署設定。部署相關說明與檔案包括：
 
 - `.github/workflows/deploy-vm.yml`
 - `docker-compose.vm-pull.yml`
