@@ -9,7 +9,9 @@ WORKDIR /workspace
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
 RUN --mount=type=cache,target=/root/.m2 \
-    chmod +x mvnw && ./mvnw -B dependency:go-offlinech
+    sed -i 's/\r$//' mvnw \
+    && chmod +x mvnw \
+    && ./mvnw -B dependency:go-offline
 
 COPY src src
 RUN --mount=type=cache,target=/root/.m2 ./mvnw -B package -DskipTests

@@ -2,12 +2,14 @@ import { CASE_STUDIES, DELIVERY_STAGES, PRODUCTS } from "./landingContent";
 
 interface WorkShowcaseProps {
   portfolioTitle: string;
+  mode?: "all" | "skills" | "portfolio";
 }
 
-export function WorkShowcase({ portfolioTitle }: WorkShowcaseProps) {
+export function WorkShowcase({ portfolioTitle, mode = "all" }: WorkShowcaseProps) {
   return (
-    <section id="skills" className="bg-[#151714] px-6 py-24 text-[#f1f0ea] md:px-10 lg:py-32">
+    <section id={mode === "portfolio" ? "portfolio" : "skills"} className="bg-[#151714] px-6 py-24 text-[#f1f0ea] md:px-10 lg:py-32">
       <div className="mx-auto max-w-5xl">
+        {mode !== "portfolio" && <>
         <div className="grid gap-12 lg:grid-cols-[.55fr_1fr]">
           <p className="pt-3 font-mono text-[9px] uppercase tracking-[.26em] text-[#a7c84b]">
             Engineering approach<br />
@@ -28,7 +30,9 @@ export function WorkShowcase({ portfolioTitle }: WorkShowcaseProps) {
           ))}
         </div>
 
-        <div id="portfolio" className="mt-20 border-t border-white/10 pt-6">
+        </>}
+        {mode !== "skills" && <>
+        <div id={mode === "all" ? "portfolio" : undefined} className="mt-20 border-t border-white/10 pt-6">
           <p className="font-mono text-[9px] uppercase tracking-[.2em] text-white/30">Portfolio</p>
           <h2 className="mt-3 text-4xl font-semibold uppercase tracking-tight md:text-6xl">{portfolioTitle}</h2>
         </div>
@@ -58,6 +62,7 @@ export function WorkShowcase({ portfolioTitle }: WorkShowcaseProps) {
             ))}
           </div>
         </div>
+        </>}
       </div>
     </section>
   );

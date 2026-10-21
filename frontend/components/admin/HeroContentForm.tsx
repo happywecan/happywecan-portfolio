@@ -30,12 +30,13 @@ const ImageUploadField = ({ label, value, name, onUrlChange }: { label: string, 
     try {
       const filePath = await uploadImage(file, token);
       onUrlChange(name, filePath);
-      toast.success("Image uploaded successfully!");
+      toast.success("圖片已上傳，儲存主視覺後才會顯示在首頁。");
 
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, "Failed to upload image."));
     } finally {
       setUploading(false);
+      event.target.value = '';
     }
   };
 
@@ -121,9 +122,10 @@ const HeroContentForm: React.FC = () => {
 
     try {
       setSubmitting(true);
+      setError(null);
       const updatedSettings = await updateHeroSettings(settings, token);
       setSettings(updatedSettings);
-      toast.success("Hero settings updated successfully!");
+      toast.success("主視覺設定已儲存，重新整理首頁即可查看。");
     } catch (err: unknown) {
       const message = getErrorMessage(err, "Failed to update hero settings.");
       setError(message);
@@ -137,20 +139,18 @@ const HeroContentForm: React.FC = () => {
     return <div className="text-center text-gray-500">Loading hero settings...</div>;
   }
 
-  if (error) {
-    return <div className="text-center text-red-500">Error: {error}</div>;
-  }
-
   if (!settings) {
-    return <div className="text-center text-gray-500">No hero settings available.</div>;
+    return <div className="text-center text-red-500">{error || '無法載入主視覺設定。'}</div>;
   }
 
   return (
     <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
-      <h2 className="text-2xl font-bold text-white mb-6">Edit Hero Section Content</h2>
+      <h2 className="text-2xl font-bold text-white mb-2">編輯首頁主視覺</h2>
+      <p className="mb-6 text-sm text-gray-400">以下內容會顯示在首頁最上方的主視覺，也會出現在首頁編排預覽中。</p>
+      {error && <p role="alert" className="rounded bg-red-950 px-3 py-2 text-sm text-red-200">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="hero_main_title" className="block text-gray-300 text-sm font-bold mb-2">Main Title:</label>
+          <label htmlFor="hero_main_title" className="block text-gray-300 text-sm font-bold mb-2">主標題</label>
           <input
             type="text"
             id="hero_main_title"
@@ -162,7 +162,7 @@ const HeroContentForm: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="hero_subtitle" className="block text-gray-300 text-sm font-bold mb-2">Subtitle:</label>
+          <label htmlFor="hero_subtitle" className="block text-gray-300 text-sm font-bold mb-2">副標題（主標題下方）</label>
           <input
             type="text"
             id="hero_subtitle"
@@ -175,21 +175,21 @@ const HeroContentForm: React.FC = () => {
         </div>
         
         <ImageUploadField
-          label="Background Image URL:"
+          label="背景圖片（主視覺底圖）"
           name="hero_background_image_url"
           value={settings.hero_background_image_url}
           onUrlChange={handleUrlChange}
         />
         
         <ImageUploadField
-          label="Personal Photo URL:"
+          label="個人照片（主視覺右側）"
           name="hero_personal_photo_url"
           value={settings.hero_personal_photo_url}
           onUrlChange={handleUrlChange}
         />
 
         <div data-color-mode="dark">
-          <label htmlFor="hero_bio_content" className="block text-gray-300 text-sm font-bold mb-2">Bio Content (Markdown):</label>
+          <label htmlFor="hero_bio_content" className="block text-gray-300 text-sm font-bold mb-2">簡介（副標題下方，支援 Markdown）</label>
           <MDEditor
             value={settings.hero_bio_content}
             onChange={handleMdeChange}
@@ -198,7 +198,7 @@ const HeroContentForm: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="hero_button_1_label" className="block text-gray-300 text-sm font-bold mb-2">Button 1 Label:</label>
+          <label htmlFor="hero_button_1_label" className="block text-gray-300 text-sm font-bold mb-2">作品按鈕文字（連到作品區）</label>
           <input
             type="text"
             id="hero_button_1_label"
@@ -210,7 +210,7 @@ const HeroContentForm: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="hero_button_2_label" className="block text-gray-300 text-sm font-bold mb-2">Button 2 Label:</label>
+          <label htmlFor="hero_button_2_label" className="block text-gray-300 text-sm font-bold mb-2">聯絡按鈕文字（連到聯絡區）</label>
           <input
             type="text"
             id="hero_button_2_label"
@@ -226,7 +226,7 @@ const HeroContentForm: React.FC = () => {
           disabled={submitting}
           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300"
         >
-          {submitting ? 'Saving...' : 'Save Hero Settings'}
+          {submitting ? '儲存中...' : '儲存主視覺'}
         </button>
       </form>
     </div>
