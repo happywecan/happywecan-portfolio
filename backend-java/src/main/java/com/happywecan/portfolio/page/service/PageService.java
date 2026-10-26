@@ -18,6 +18,20 @@ import com.happywecan.portfolio.page.web.PageResponse;
 
 @Service
 public class PageService {
+    private static final Set<String> EDITORIAL_FIELDS = Set.of(
+            "hero_main_title", "hero_subtitle", "hero_bio_content", "hero_button_1_label",
+            "hero_button_2_label", "hero_resume_label", "hero_background_image_url", "hero_personal_photo_url",
+            "about_section_label", "about_company", "about_eyebrow", "about_heading", "about_role_label",
+            "about_role", "about_summary", "about_perspective", "about_projects_label", "about_projects_note",
+            "about_evidence_label", "about_resume_label",
+            "skills_eyebrow", "skills_heading", "skills_intro", "skills_caption",
+            "portfolio_eyebrow", "portfolio_title", "products_eyebrow", "products_heading",
+            "blog_title", "blog_description",
+            "contact_title", "contact_intro", "contact_email", "contact_location_label",
+            "contact_location", "contact_name_label", "contact_name_placeholder",
+            "contact_email_label", "contact_email_placeholder", "contact_message_label",
+            "contact_message_placeholder", "contact_submit_label", "contact_submitting_label",
+            "contact_socials_label", "contact_footer_note", "contact_footer_stack", "contact_local_time_label");
     private final PageRepository repository;
     public PageService(PageRepository repository) { this.repository = repository; }
     public PageResponse findBySlug(String slug) {
@@ -64,7 +78,8 @@ public class PageService {
         for (var block : request.blocks()) {
             if (!ids.add(block.id())) throw new IllegalArgumentException("區塊 ID 不可重複");
             Map<String, Object> content = block.content();
-            if (content.size() > 12) throw new IllegalArgumentException("區塊欄位過多");
+            if (content.size() > ("editorial".equals(block.type()) ? 120 : 12))
+                throw new IllegalArgumentException("區塊欄位過多");
             Set<String> allowed = switch (block.type()) {
                 case "rich_text" -> Set.of("eyebrow", "title", "body");
                 case "image_text" -> Set.of("eyebrow", "title", "body", "image_url", "image_alt", "image_side");
@@ -73,9 +88,11 @@ public class PageService {
                 default -> Set.of();
             };
             for (var entry : content.entrySet()) {
-                if (!allowed.contains(entry.getKey()) || !(entry.getValue() instanceof String value) || value.length() > 10000)
+                if (!(allowed.contains(entry.getKey()) || ("editorial".equals(block.type()) && editorialField(entry.getKey())))
+                        || !(entry.getValue() instanceof String value) || value.length() > 10000)
                     throw new IllegalArgumentException("區塊欄位無效：" + entry.getKey());
                 totalCharacters += value.length();
+                if ("editorial".equals(block.type())) validateEditorialValue(entry.getKey(), value);
             }
             if (Set.of("rich_text", "image_text", "cta").contains(block.type())) required(content, "title");
             if ("image_text".equals(block.type())) {
@@ -96,6 +113,22 @@ public class PageService {
                 throw new IllegalArgumentException("留白高度無效");
         }
         if (totalCharacters > 100000) throw new IllegalArgumentException("頁面內容過長");
+    }
+    private boolean editorialField(String key) {
+        return EDITORIAL_FIELDS.contains(key)
+                || key.matches("proof_0[1-3]_(status|title|value|label|detail)")
+                || key.matches("stage_[1-3]_(problem|title|body|evidence|tools)")
+                || key.matches("skill_group_(ai|backend|data|devops|automation|frontend)_(label|tags|core|production)")
+                || key.matches("case_0[1-2]_(label|title|body|tags)")
+                || key.matches("product_[1-3]_(title|body)")
+                || key.matches("threads_post_[1-3]_url");
+    }
+    private void validateEditorialValue(String key, String value) {
+        if (key.matches("hero_(background_image|personal_photo)_url") && !value.isBlank()
+                && !value.matches("(?i)(https?://[^\\s]+|/static/[^\\s]+)"))
+            throw new IllegalArgumentException("圖片網址無效");
+        if (key.matches("threads_post_[1-3]_url") && !value.matches("https://(www\\.)?threads\\.com/@[^/]+/post/[A-Za-z0-9_-]+/?"))
+            throw new IllegalArgumentException("Threads 網址無效");
     }
     private String string(Map<String, Object> content, String key) { return (String) content.getOrDefault(key, ""); }
     private void required(Map<String, Object> content, String key) {

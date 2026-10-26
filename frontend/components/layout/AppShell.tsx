@@ -11,6 +11,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAdminRoute = pathname.startsWith("/admin") || pathname.startsWith("/login");
   const isPreviewRoute = pathname.startsWith("/preview/");
+  const isProjectRoute = pathname === "/side-projects" || pathname.startsWith("/portfolio/");
 
   if (isAdminRoute) {
     return (
@@ -22,11 +23,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <SmoothScroll>
-      {!isPreviewRoute && <DailyKeywordSplash />}
+      {!isPreviewRoute && !isProjectRoute && <DailyKeywordSplash />}
       <CustomCursor />
       <div className="relative flex min-h-screen cursor-none flex-col">
-        <TopNavigation />
-        <SideNavigation />
+        {!isProjectRoute && <TopNavigation />}
+        {!isProjectRoute && <SideNavigation />}
         <main className="relative z-10 flex-grow">
           {children}
         </main>

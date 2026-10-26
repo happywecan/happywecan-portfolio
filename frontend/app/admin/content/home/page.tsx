@@ -1,5 +1,4 @@
 import PageBuilder from "@/components/admin/PageBuilder";
-import HomeContentSettings from "@/components/admin/HomeContentSettings";
 import AdminPageHeader from "@/components/admin/shell/AdminPageHeader";
 import type { CmsPage } from "@/services/pageService";
 
@@ -12,5 +11,5 @@ export default async function HomeContentPage() {
   } catch {
     // PageBuilder will retry from the browser if the server request fails.
   }
-  return <><AdminPageHeader title="首頁內容" description="編排區塊、預覽並發布首頁。" /><PageBuilder initialPage={initialPage} /><HomeContentSettings /></>;
+  return <><AdminPageHeader title="首頁內容" description="點選網站畫面中的區塊，直接修改內容並即時預覽。" /><PageBuilder initialPage={initialPage} /></>;
 }

@@ -16,9 +16,9 @@ export const DEFAULT_HERO_SETTINGS: HeroSettings = {
   settings_id: 'hero_settings',
   hero_personal_photo_url: '/placeholder.jpg',
   hero_main_title: 'Angelo Developer',
-  hero_subtitle: 'Creative Developer',
-  hero_bio_content: 'Based in Taiwan, creating premium digital experiences with a focus on motion and interaction.',
-  hero_button_1_label: 'View Work',
+  hero_subtitle: 'Manufacturing Digital Transformation | AI Applications | Full-Stack Development',
+  hero_bio_content: 'Based in Taiwan, building internal AI applications, web systems, and workflow automation for practical business needs.',
+  hero_button_1_label: '查看工作經驗',
   hero_button_2_label: 'Contact Me',
 };
 

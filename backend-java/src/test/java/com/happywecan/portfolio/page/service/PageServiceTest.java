@@ -45,6 +45,50 @@ class PageServiceTest {
     }
 
     @Test
+    void savesEditableAboutAndSkillsContent() {
+        when(repository.findBySlug("home")).thenReturn(Optional.empty());
+        when(repository.save(any(PageDocument.class))).thenAnswer(call -> call.getArgument(0));
+        var content = Map.<String, Object>ofEntries(
+                Map.entry("about_section_label", "01 / Experience"),
+                Map.entry("about_company", "Taiwan Murata"),
+                Map.entry("about_eyebrow", "About / Manufacturing DX"),
+                Map.entry("about_heading", "I build internal AI tools for manufacturing teams."),
+                Map.entry("about_role_label", "Current role"),
+                Map.entry("about_role", "Digital Transformation Specialist"),
+                Map.entry("about_summary", "Operational needs into usable applications."),
+                Map.entry("about_perspective", "Understand the process before choosing a model."),
+                Map.entry("about_projects_label", "Selected work projects"),
+                Map.entry("about_projects_note", "Only public project details."),
+                Map.entry("about_evidence_label", "Selected work"),
+                Map.entry("case_01_title", "RAG knowledge application"),
+                Map.entry("case_01_body", "Evaluated answer quality."),
+                Map.entry("proof_01_title", "Internal knowledge assistant"),
+                Map.entry("proof_01_value", "100+"),
+                Map.entry("skills_eyebrow", "Capabilities"),
+                Map.entry("skills_intro", "AI applications, data access, and workflows."),
+                Map.entry("skill_group_ai_label", "AI / LLM"),
+                Map.entry("skill_group_ai_tags", "RAG · Dify"),
+                Map.entry("skill_group_ai_core", "RAG"),
+                Map.entry("skill_group_ai_production", "RAG"),
+                Map.entry("stage_1_problem", "文件太多，答案難找"),
+                Map.entry("stage_1_title", "Internal AI apps"),
+                Map.entry("stage_1_evidence", "已上線"),
+                Map.entry("stage_1_tools", "RAG · agents · evaluation"));
+        var request = new PageRequest("首頁", 0L, List.of(
+                new PageBlockRequest("editorial-default", "editorial", true, content)));
+        var result = new PageService(repository).update("home", request);
+        assertThat(result.blocks().getFirst().content()).containsAllEntriesOf(content);
+    }
+
+    @Test
+    void rejectsUnexpectedEditorialField() {
+        var request = new PageRequest("首頁", 0L, List.of(
+                new PageBlockRequest("editorial-default", "editorial", true, Map.of("unsafe_html", "<script>"))));
+        assertThatThrownBy(() -> new PageService(repository).update("home", request))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void rejectsUnsafeCtaUrl() {
         var request = new PageRequest("首頁", 0L, List.of(
                 new PageBlockRequest("cta", "cta", true, Map.of("title", "標題", "button_label", "前往", "button_url", "javascript:alert(1)"))));

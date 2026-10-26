@@ -9,6 +9,7 @@ import { LandingHero } from "@/features/landing/LandingHero";
 import { PositioningSection } from "@/features/landing/PositioningSection";
 import { WorkShowcase } from "@/features/landing/WorkShowcase";
 import { NotesSection } from "@/features/landing/NotesSection";
+import { experienceTitle } from "@/features/landing/landingContent";
 import { useLandingSettings } from "@/features/landing/useLandingSettings";
 import type { HeroSettings, SiteSettings } from "@/services/staticContentService";
 import { getPage, type CmsPage, type PageBlock } from "@/services/pageService";
@@ -28,12 +29,12 @@ function safeHref(value: string) {
 }
 
 function renderBlock(block: PageBlock, hero: HeroSettings | null, site: SiteSettings | null) {
-  const portfolioTitle = site?.portfolio_title?.trim() || "Selected work";
+  const portfolioTitle = experienceTitle(site?.portfolio_title);
   const blogTitle = site?.blog_title?.trim() || "Notes from the work";
   switch (block.type) {
-    case "editorial": return <EditorialLanding hero={hero} site={site} />;
+    case "editorial": return <EditorialLanding hero={hero} site={site} copy={block.content} />;
     case "hero": return <LandingHero settings={hero} />;
-    case "about": return <PositioningSection />;
+    case "about": return <PositioningSection settings={hero} />;
     case "skills": return <WorkShowcase mode="skills" portfolioTitle={portfolioTitle} />;
     case "portfolio": return <WorkShowcase mode="portfolio" portfolioTitle={portfolioTitle} />;
     case "blog": return <NotesSection title={blogTitle} />;
@@ -61,5 +62,5 @@ export default function HomePageRenderer({ preview, initialPage, initialHero = n
   useEffect(() => { if (!preview && !window.location.hash) { window.history.scrollRestoration = "manual"; requestAnimationFrame(() => window.scrollTo(0, 0)); } }, [preview]);
   const current = preview || page;
   const blocks = current.blocks.filter((block) => block.enabled);
-  return <>{(blocks.length ? blocks : fallback.blocks).map((block) => <div key={block.id}>{renderBlock(block, hero, site)}</div>)}</>;
+  return <>{(blocks.length ? blocks : fallback.blocks).map((block) => <div key={block.id} data-cms-block-id={block.id}>{renderBlock(block, hero, site)}</div>)}</>;
 }

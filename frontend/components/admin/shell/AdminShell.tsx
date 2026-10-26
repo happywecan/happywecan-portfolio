@@ -146,7 +146,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           <div className="hidden items-center gap-2 text-xs text-zinc-500 sm:flex"><Globe size={14} /><span>Angelo Developer</span><ChevronRight size={14} /><span>管理後台</span></div>
           <a href="/" target="_blank" rel="noreferrer" className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-950">查看網站</a>
         </header>
-        <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-10 lg:py-10">{children}</div>
+        <div className={`mx-auto px-4 py-6 sm:px-6 lg:py-10 ${pathname === "/admin/content/home" ? "max-w-none lg:px-6" : "max-w-7xl lg:px-10"}`}>{children}</div>
       </main>
       <ToastContainer position="bottom-right" theme="dark" />
     </div>

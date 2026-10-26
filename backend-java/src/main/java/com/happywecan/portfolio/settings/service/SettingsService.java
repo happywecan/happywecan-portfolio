@@ -79,7 +79,7 @@ public class SettingsService {
         values.put("hero_main_title", "Angelo Developer");
         values.put("hero_subtitle", "Creative Developer");
         values.put("hero_bio_content", "Based in Taiwan, building thoughtful digital products.");
-        values.put("hero_button_1_label", "View Work");
+        values.put("hero_button_1_label", "查看工作經驗");
         values.put("hero_button_2_label", "Contact Me");
         return values;
     }
@@ -93,7 +93,7 @@ public class SettingsService {
         values.put("social_github", "");
         values.put("social_instagram", "");
         values.put("social_youtube", "");
-        values.put("portfolio_title", "Selected Work");
+        values.put("portfolio_title", "工作經驗");
         values.put("portfolio_subtitle", "A collection of projects exploring the intersection of design, code, and interaction.");
         values.put("blog_title", "Insights");
         values.put("nav_brand_primary", "Angelo");
@@ -102,7 +102,7 @@ public class SettingsService {
         values.put("nav_home_label", "Home");
         values.put("nav_about_label", "About");
         values.put("nav_skills_label", "Skills");
-        values.put("nav_portfolio_label", "Work");
+        values.put("nav_portfolio_label", "Experience");
         values.put("nav_blog_label", "Blog");
         values.put("nav_contact_label", "Contact");
         values.put("intro_splash_enabled", true);
@@ -164,8 +164,8 @@ public class SettingsService {
         values.put("detail_blog_back_label", "Back to journal");
         values.put("detail_blog_eyebrow", "Journal");
         values.put("detail_blog_not_found", "Article not found");
-        values.put("detail_portfolio_back_label", "Back to portfolio");
-        values.put("detail_portfolio_eyebrow", "Case study");
+        values.put("detail_portfolio_back_label", "← Back to side projects");
+        values.put("detail_portfolio_eyebrow", "Side Project");
         values.put("detail_portfolio_not_found", "Project not found");
         values.put("contact_title", "Contact");
         values.put("contact_intro_label", "Get in touch");
