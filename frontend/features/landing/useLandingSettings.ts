@@ -17,8 +17,8 @@ interface LandingSettings {
  * Keeps the public landing page's two editable content sources in one place.
  * Components deliberately receive plain data so they remain easy to read and test.
  */
-export function useLandingSettings(): LandingSettings {
-  const [settings, setSettings] = useState<LandingSettings>({ hero: null, site: null });
+export function useLandingSettings(initialHero: HeroSettings | null = null): LandingSettings {
+  const [settings, setSettings] = useState<LandingSettings>({ hero: initialHero, site: null });
 
   useEffect(() => {
     let cancelled = false;

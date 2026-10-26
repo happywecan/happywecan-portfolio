@@ -3,12 +3,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link as ScrollLink } from 'react-scroll';
 import { SiteSettings, getSiteSettings } from '@/services/staticContentService';
+import { experienceNavLabel } from '@/features/landing/landingContent';
 
 const defaultNavItems = [
   { id: 'hero', label: 'Home' },
   { id: 'about', label: 'About' },
+  { id: 'portfolio', label: 'Experience' },
   { id: 'skills', label: 'Skills' },
-  { id: 'portfolio', label: 'Work' },
   { id: 'blog', label: 'Blog' },
   { id: 'contact', label: 'Contact' },
 ];
@@ -25,13 +26,13 @@ const SideNavigation: React.FC = () => {
   const navItems = useMemo(() => (
     settings
       ? [
-        { id: 'hero', label: settings.nav_home_label || 'Home', enabled: settings.section_hero_enabled },
-        { id: 'about', label: settings.nav_about_label || 'About', enabled: settings.section_about_enabled },
-        { id: 'skills', label: settings.nav_skills_label || 'Skills', enabled: settings.section_skills_enabled },
-        { id: 'portfolio', label: settings.nav_portfolio_label || 'Work', enabled: settings.section_portfolio_enabled },
-        { id: 'blog', label: settings.nav_blog_label || 'Blog', enabled: settings.section_blog_enabled },
-        { id: 'contact', label: settings.nav_contact_label || 'Contact', enabled: settings.section_contact_enabled },
-      ].filter((item) => item.enabled)
+        { id: 'hero', label: settings.nav_home_label || 'Home' },
+        { id: 'about', label: settings.nav_about_label || 'About' },
+        { id: 'portfolio', label: experienceNavLabel(settings.nav_portfolio_label) },
+        { id: 'skills', label: settings.nav_skills_label || 'Skills' },
+        { id: 'blog', label: settings.nav_blog_label || 'Blog' },
+        { id: 'contact', label: settings.nav_contact_label || 'Contact' },
+      ]
       : defaultNavItems
   ), [settings]);
 

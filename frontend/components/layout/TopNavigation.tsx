@@ -5,12 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link as ScrollLink } from "react-scroll";
 import Image from "next/image";
 import { SiteSettings, getSiteSettings } from "@/services/staticContentService";
+import { experienceNavLabel } from "@/features/landing/landingContent";
 
 const defaultNavItems = [
   { id: "hero", label: "home" },
   { id: "about", label: "about" },
+  { id: "portfolio", label: "Experience" },
   { id: "skills", label: "skills" },
-  { id: "portfolio", label: "portfolio" },
   { id: "blog", label: "blog" },
   { id: "contact", label: "contact" },
 ];
@@ -23,13 +24,13 @@ export default function TopNavigation() {
 
   const navItems = settings
     ? [
-        { id: "hero", label: settings.nav_home_label || "home", enabled: settings.section_hero_enabled },
-        { id: "about", label: settings.nav_about_label || "about", enabled: settings.section_about_enabled },
-        { id: "skills", label: settings.nav_skills_label || "skills", enabled: settings.section_skills_enabled },
-        { id: "portfolio", label: settings.nav_portfolio_label || "portfolio", enabled: settings.section_portfolio_enabled },
-        { id: "blog", label: settings.nav_blog_label || "blog", enabled: settings.section_blog_enabled },
-        { id: "contact", label: settings.nav_contact_label || "contact", enabled: settings.section_contact_enabled },
-      ].filter((item) => item.enabled)
+        { id: "hero", label: settings.nav_home_label || "home" },
+        { id: "about", label: settings.nav_about_label || "about" },
+        { id: "portfolio", label: experienceNavLabel(settings.nav_portfolio_label) },
+        { id: "skills", label: settings.nav_skills_label || "skills" },
+        { id: "blog", label: settings.nav_blog_label || "blog" },
+        { id: "contact", label: settings.nav_contact_label || "contact" },
+      ]
     : defaultNavItems;
 
   const scrollHome = () => {

@@ -1,49 +1,54 @@
-import { CheckCircle2 } from "lucide-react";
-import { OPERATING_PRINCIPLES, STACK_SUMMARY } from "./landingContent";
+import Image from "next/image";
+import { ArrowDownRight, ArrowUpRight, FileDown } from "lucide-react";
+import type { HeroSettings } from "@/services/staticContentService";
+import { editorialText, type EditorialCopy } from "./editorialCopy";
+import { FALLBACK_PORTRAIT, landingPortraitUrl } from "./LandingHero";
 
-export function PositioningSection() {
+export function PositioningSection({ copy, settings, integrated = false }: { copy?: EditorialCopy; settings?: HeroSettings | null; integrated?: boolean }) {
+  const portraitUrl = landingPortraitUrl(settings ?? null, copy);
   return (
-    <section id="about" className="relative overflow-hidden bg-[#f2f0e9] px-6 py-24 text-[#17181a] md:px-10 lg:py-32">
-      <div className="absolute -right-16 top-10 h-64 w-64 rounded-full bg-[#dcff62]/40 blur-3xl" />
-      <div className="mx-auto max-w-5xl">
-        <p className="mb-5 font-mono text-[9px] uppercase tracking-[.28em] text-[#758f2d]">
-          01 / Positioning · Taiwan
-        </p>
-        <div className="grid gap-12 md:grid-cols-[1.35fr_.75fr]">
-          <div>
-            <h2 className="text-[clamp(3.5rem,7vw,7rem)] font-medium uppercase leading-[.86] tracking-[-.065em]">
-              AI features.<br />Engineered<br />to operate.
-            </h2>
-            <div className="mt-9 grid gap-6 border-t border-black/15 pt-5 sm:grid-cols-2">
-              <p className="font-mono text-[11px] font-semibold uppercase">
-                Manufacturing<br />AI / DX<br />
-                <span className="font-normal text-black/40">From workflow to release</span>
-              </p>
-              <p className="text-sm leading-6 text-black/65">
-                I turn operational problems into production-minded software: clear requirements,
-                secure APIs, useful interfaces, AI workflows, and a practical path for teams to own what ships.
+    <section id="about" data-cms-section="about" className={`bg-[#f3f4f1] px-5 pt-24 text-[#202421] md:px-10 md:pt-28 ${integrated ? "pb-0" : "pb-5"}`}>
+      <div className="mx-auto max-w-[850px]">
+        <div className={`border border-[#e0e3dd] bg-white px-6 py-7 md:px-11 md:py-10 ${integrated ? "rounded-t-[28px] border-b-0" : "rounded-[28px] shadow-[0_20px_60px_-40px_rgba(24,32,26,.28)]"}`}>
+          <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] font-medium text-[#727a73]">
+            <span data-cms-field="about_section_label" className="uppercase tracking-[.16em]">{editorialText(copy, "about_section_label", "01 / About")}</span>
+          </div>
+
+          <div className="mt-9 flex items-center gap-4 md:mt-10">
+            <div className="relative size-14 shrink-0 overflow-hidden rounded-full bg-[#e9ede8] md:size-16">
+              <Image src={portraitUrl} alt="Angelo Lo" fill sizes="64px" className={`object-cover ${portraitUrl === FALLBACK_PORTRAIT ? "[transform:scale(2.5)_translateY(29%)]" : ""}`} />
+            </div>
+            <div className="min-w-0">
+              <p data-cms-field="about_eyebrow" className="text-lg font-semibold tracking-[-.03em] md:text-xl">{editorialText(copy, "about_eyebrow", "Angelo Lo")}</p>
+              <p className="mt-0.5 text-xs leading-5 text-[#747b75]">
+                <span data-cms-field="about_role_label">{editorialText(copy, "about_role_label", "目前職務")}</span>
+                <span aria-hidden="true" className="mx-2">·</span>
+                <span data-cms-field="about_role">{editorialText(copy, "about_role", "Digital Transformation Specialist")}</span>
               </p>
             </div>
           </div>
-          <div className="border-t border-black/15 pt-5">
-            <p className="font-mono text-[9px] uppercase tracking-[.22em] text-black/40">How I work</p>
-            <ul className="mt-4">
-              {OPERATING_PRINCIPLES.map((principle) => (
-                <li key={principle} className="flex gap-3 border-b border-black/10 py-4 text-sm leading-6 text-black/70">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#758f2d]" />
-                  {principle}
-                </li>
-              ))}
-            </ul>
+
+          <h2 data-cms-field="about_heading" style={{ textTransform: "none" }} className="mt-9 max-w-[710px] text-balance text-[clamp(1.85rem,4.1vw,3.5rem)] font-semibold leading-[1.24] tracking-[-.055em] md:mt-10">
+            {editorialText(copy, "about_heading", "嗨，我是 Angelo。")}
+          </h2>
+          <p data-cms-field="about_summary" className="mt-5 max-w-[690px] text-[15px] leading-8 text-[#59625a] md:text-base">
+            {editorialText(copy, "about_summary", "我在台灣村田做數位轉型，平常接觸的是製造現場的資料、內部流程，以及同事每天真的會遇到的問題。我的工作是把這些需求整理清楚，再做成能用的工具。")}
+          </p>
+          <p data-cms-field="about_perspective" className="mt-4 max-w-[690px] text-[15px] leading-8 text-[#59625a] md:text-base">
+            {editorialText(copy, "about_perspective", "我喜歡先弄懂人是怎麼工作的，再決定要用哪種技術。有時候把資料來源、權限和例外情況理清楚，比選一個新模型更重要。")}
+          </p>
+
+          <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-[#e8ebe6] pt-6">
+            <a data-cms-field="about_evidence_label" href="#portfolio" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#202421] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#3b5141]">
+              {editorialText(copy, "about_evidence_label", "了解我的工作")}
+              <ArrowDownRight aria-hidden="true" size={16} />
+            </a>
+            <a data-cms-field="about_resume_label" href="/resume/Angelo_Lo_English_Resume.pdf" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#d9dfd8] px-5 text-sm font-semibold text-[#29312b] transition-colors hover:bg-[#f1f4f0]">
+              <FileDown aria-hidden="true" size={16} />
+              {editorialText(copy, "about_resume_label", "下載英文履歷")}
+              <ArrowUpRight aria-hidden="true" size={14} />
+            </a>
           </div>
-        </div>
-        <div className="mt-12 grid border-t border-black/15 sm:grid-cols-3">
-          {STACK_SUMMARY.map(([value, label]) => (
-            <div key={value} className="border-b border-black/15 py-6 sm:border-r sm:px-6 first:pl-0 last:border-r-0">
-              <p className="text-2xl font-semibold uppercase">{value}</p>
-              <p className="mt-1 font-mono text-[9px] uppercase tracking-[.16em] text-black/40">{label}</p>
-            </div>
-          ))}
         </div>
       </div>
     </section>

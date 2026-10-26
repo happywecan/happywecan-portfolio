@@ -32,13 +32,17 @@ function clearPendingSplash() {
 
 export default function DailyKeywordSplash() {
   const todayKey = useMemo(() => getTodayKey(), []);
-  const [visible, setVisible] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(STORAGE_KEY) !== todayKey;
-  });
+  const [visible, setVisible] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const [keywords, setKeywords] = useState(FALLBACK_KEYWORDS);
 
   useEffect(() => {
+    setVisible(localStorage.getItem(STORAGE_KEY) !== todayKey);
+    setInitialized(true);
+  }, [todayKey]);
+
+  useEffect(() => {
+    if (!initialized) return;
     if (!visible) {
       clearPendingSplash();
       return;
@@ -81,7 +85,7 @@ export default function DailyKeywordSplash() {
         window.clearTimeout(hideTimer);
       }
     };
-  }, [todayKey, visible]);
+  }, [todayKey, visible, initialized]);
 
   if (!visible) return null;
 

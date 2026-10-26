@@ -35,7 +35,7 @@ const introSplashBootScript = `
 (() => {
   try {
     const path = window.location.pathname;
-    if (path.startsWith("/admin") || path.startsWith("/login")) return;
+    if (path.startsWith("/admin") || path.startsWith("/login") || path === "/side-projects" || path.startsWith("/portfolio/")) return;
 
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";

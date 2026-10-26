@@ -1,35 +1,21 @@
-"use client";
-
-import { API_BASE_URL } from "@/services/apiClient";
 import { LandingHero } from "@/features/landing/LandingHero";
 import { NotesSection } from "@/features/landing/NotesSection";
 import { PositioningSection } from "@/features/landing/PositioningSection";
-import { useLandingSettings } from "@/features/landing/useLandingSettings";
 import { WorkShowcase } from "@/features/landing/WorkShowcase";
+import type { HeroSettings, SiteSettings } from "@/services/staticContentService";
 import ContactSection from "./ContactSection";
+import type { EditorialCopy } from "@/features/landing/editorialCopy";
+import { experienceTitle } from "@/features/landing/landingContent";
 
-const FALLBACK_PORTRAIT = `${API_BASE_URL}/static/uploads/4e0a62f8-a2e5-4eb8-9f9e-88cb0819e66c.jpg`;
-
-/**
- * Composition root for the public landing page.
- *
- * Each visual section owns its markup, static portfolio copy lives in
- * `features/landing/landingContent.ts`, and this root only connects editable
- * API data to the sections that need it.
- */
-export default function EditorialLanding() {
-  const { hero, site } = useLandingSettings();
-
+export default function EditorialLanding({ hero, site, copy }: { hero: HeroSettings | null; site: SiteSettings | null; copy?: EditorialCopy }) {
   return (
     <>
-      <LandingHero
-        title={hero?.hero_main_title.trim() || "Angelo Developer"}
-        portraitUrl={FALLBACK_PORTRAIT}
-      />
-      <PositioningSection />
-      <WorkShowcase portfolioTitle={site?.portfolio_title.trim() || "Selected work"} />
-      <NotesSection title={site?.blog_title.trim() || "Notes from the work"} />
-      <ContactSection />
+      <LandingHero settings={hero} copy={copy} />
+      <PositioningSection copy={copy} settings={hero} integrated />
+      <WorkShowcase mode="portfolio" portfolioTitle={experienceTitle(site?.portfolio_title)} copy={copy} integrated />
+      <WorkShowcase mode="skills" portfolioTitle={experienceTitle(site?.portfolio_title)} copy={copy} />
+      <NotesSection title={site?.blog_title?.trim() || "Notes from the work"} copy={copy} />
+      <ContactSection copy={copy} />
     </>
   );
 }

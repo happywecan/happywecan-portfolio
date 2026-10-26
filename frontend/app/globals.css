@@ -145,3 +145,25 @@ html.lenis {
     transform: scaleX(1);
   }
 }
+.cms-preview-editing [data-cms-section] {
+  cursor: pointer;
+}
+
+.cms-preview-editing [data-cms-field^="threads_post_"] iframe {
+  pointer-events: none;
+}
+
+.cms-preview-editing [data-cms-section]:hover {
+  outline: 3px solid #a7c84b;
+  outline-offset: -3px;
+}
+
+.cms-preview-editing[data-selected-section="hero"] [data-cms-section="hero"],
+.cms-preview-editing[data-selected-section="about"] [data-cms-section="about"],
+.cms-preview-editing[data-selected-section="skills"] [data-cms-section="skills"],
+.cms-preview-editing[data-selected-section="portfolio"] [data-cms-section="portfolio"],
+.cms-preview-editing[data-selected-section="blog"] [data-cms-section="blog"],
+.cms-preview-editing[data-selected-section="contact"] [data-cms-section="contact"] {
+  outline: 3px solid #455ce9;
+  outline-offset: -3px;
+}

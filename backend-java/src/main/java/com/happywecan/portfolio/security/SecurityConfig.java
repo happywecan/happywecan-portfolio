@@ -51,6 +51,8 @@ public class SecurityConfig {
                                 "/api/skills/**",
                                 "/api/hobbies/**",
                                 "/api/settings/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/pages/*/revisions").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/pages/*").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))
                 .build();
